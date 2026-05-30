@@ -3,8 +3,10 @@ import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
-import tailwind from 'eslint-plugin-tailwindcss'
 import { defineConfig, globalIgnores } from 'eslint/config'
+
+// eslint-plugin-tailwindcss is incompatible with Tailwind v4 + ESLint 10
+// (uses removed context.getSourceCode() API and can't resolve v4 config)
 
 export default defineConfig([
   globalIgnores(['dist', 'coverage']),
@@ -15,7 +17,6 @@ export default defineConfig([
       tseslint.configs.recommended,
       reactHooks.configs.flat.recommended,
       reactRefresh.configs.vite,
-      ...tailwind.configs['flat/recommended'],
     ],
     languageOptions: {
       globals: globals.browser,
