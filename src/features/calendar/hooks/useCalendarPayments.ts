@@ -9,10 +9,13 @@ export interface CalendarPaymentEntry {
 
 export type DayPaymentsMap = Map<number, CalendarPaymentEntry[]>
 
-function isoDateInRange(day: Date, fromISO: string, toISO: string): boolean {
-  const from = new Date(fromISO + 'T00:00:00')
-  const to = new Date(toISO + 'T00:00:00')
-  return day >= from && day <= to
+// Paid payments are pinned to their actual payment date (paidAt);
+// scheduled and missed payments appear on the first day of the window (paymentDateFrom).
+function displayDateISO(payment: PaymentRecord): string {
+  if (payment.status === 'paid' && payment.paidAt) {
+    return payment.paidAt.slice(0, 10)
+  }
+  return payment.paymentDateFrom
 }
 
 export function useCalendarPayments(year: number, month: number): DayPaymentsMap {
@@ -28,25 +31,25 @@ export function useCalendarPayments(year: number, month: number): DayPaymentsMap
         if (inst.id != null) instrumentNames.set(inst.id, inst.name)
       }
 
-      const daysInMonth = new Date(year, month + 1, 0).getDate()
+      // Month boundaries as ISO strings for fast comparison
+      const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`
+
       const map: DayPaymentsMap = new Map()
 
-      for (let d = 1; d <= daysInMonth; d++) {
-        // Build the date for this day (month is 0-indexed)
-        const day = new Date(year, month, d)
+      for (const payment of payments) {
+        const dateISO = displayDateISO(payment)
+        if (!dateISO.startsWith(monthStr)) continue
 
-        const entries: CalendarPaymentEntry[] = []
-        for (const payment of payments) {
-          if (isoDateInRange(day, payment.paymentDateFrom, payment.paymentDateTo)) {
-            entries.push({
-              payment,
-              instrumentName:
-                instrumentNames.get(payment.instrumentId) ?? `#${payment.instrumentId}`,
-            })
-          }
+        const day = parseInt(dateISO.slice(8, 10), 10)
+        const entry: CalendarPaymentEntry = {
+          payment,
+          instrumentName: instrumentNames.get(payment.instrumentId) ?? `#${payment.instrumentId}`,
         }
-        if (entries.length > 0) {
-          map.set(d, entries)
+        const existing = map.get(day)
+        if (existing) {
+          existing.push(entry)
+        } else {
+          map.set(day, [entry])
         }
       }
 

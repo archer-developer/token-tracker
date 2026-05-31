@@ -152,12 +152,8 @@ export default function CalendarScreen() {
   let totalPaid = 0
   let totalMissed = 0
 
-  const seenPaymentIds = new Set<string>()
   for (const [, entries] of dayPaymentsMap) {
     for (const { payment } of entries) {
-      const key = `${payment.instrumentId}-${payment.periodIndex}-${payment.type}`
-      if (seenPaymentIds.has(key)) continue
-      seenPaymentIds.add(key)
       totalExpected += payment.expectedAmount
       if (payment.status === 'paid') totalPaid += payment.actualAmount ?? payment.expectedAmount
       if (payment.status === 'missed') totalMissed += payment.expectedAmount
