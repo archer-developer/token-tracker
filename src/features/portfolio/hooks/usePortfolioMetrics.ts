@@ -115,7 +115,7 @@ export function usePortfolioMetrics(): PortfolioMetrics {
       for (const e of entries) {
         switch (e.type) {
           case 'purchase':
-            purchases += e.amount
+            purchases += -e.amount // stored as -totalCost; negate to get positive total
             break
           case 'coupon':
             coupons += e.amount
@@ -189,11 +189,10 @@ export function usePortfolioMetrics(): PortfolioMetrics {
     for (const entry of ledgerEntries) {
       const inst = instrumentMap.get(entry.instrumentId)
       if (!inst) continue
+      // entry.amount is already signed correctly: purchases are stored as -totalCost
+      // (negative = money out), coupons/redemptions as positive (money in).
       const amtBase = await toBase(entry.amount, inst.currency, baseCurrency)
-      historicalFlows.push({
-        date: new Date(entry.date),
-        amount: entry.type === 'purchase' ? -amtBase : amtBase,
-      })
+      historicalFlows.push({ date: new Date(entry.date), amount: amtBase })
     }
 
     // Add all remaining scheduled payments for active instruments.
@@ -223,7 +222,7 @@ export function usePortfolioMetrics(): PortfolioMetrics {
     if (hasDefaulted) {
       for (let s = 0; s < SCENARIO_RATES.length; s++) {
         const recoveryRate = SCENARIO_RATES[s] ?? 0
-        const scenarioFlows = [...historicalFlows]
+        const scenarioFlows = [...historicalFlows, ...futureFlows]
 
         for (const inst of instruments) {
           if (inst.status !== 'defaulted' || inst.id == null) continue
@@ -231,7 +230,7 @@ export function usePortfolioMetrics(): PortfolioMetrics {
           let purchases = 0
           let recoveries = 0
           for (const e of entries) {
-            if (e.type === 'purchase') purchases += e.amount
+            if (e.type === 'purchase') purchases += -e.amount
             if (e.type === 'recovery') recoveries += e.amount
           }
           const outstandingRaw = inst.defaultOutstandingPrincipal ?? purchases
@@ -240,7 +239,7 @@ export function usePortfolioMetrics(): PortfolioMetrics {
           if (additionalRecovery > 0) {
             const recoveryDate = inst.expectedRecoveryDate
               ? new Date(inst.expectedRecoveryDate)
-              : new Date(today.getTime() + 365 * 24 * 60 * 60 * 1000)
+              : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
             const amtBase = await toBase(additionalRecovery, inst.currency, baseCurrency)
             scenarioFlows.push({ date: recoveryDate, amount: amtBase })
           }

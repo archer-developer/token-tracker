@@ -24,22 +24,33 @@ function npvDerivative(rate: number, cashFlows: CashFlow[]): number {
   }, 0)
 }
 
+function newtonRaphson(sorted: CashFlow[], initialRate: number): number | null {
+  let rate = initialRate
+  for (let i = 0; i < MAX_ITERATIONS; i++) {
+    const value = npv(rate, sorted)
+    const deriv = npvDerivative(rate, sorted)
+    if (!isFinite(value) || !isFinite(deriv) || Math.abs(deriv) < 1e-12) return null
+    const next = rate - value / deriv
+    if (!isFinite(next)) return null
+    if (Math.abs(next - rate) < TOLERANCE) return next
+    // Clamp to keep (1+rate) positive — Math.pow with negative base and
+    // fractional exponent returns NaN, silently poisoning all subsequent iterations.
+    rate = Math.max(-0.9999, next)
+  }
+  return null
+}
+
 export function xirr(cashFlows: CashFlow[]): number | null {
   if (cashFlows.length < 2) return null
 
   const sorted = [...cashFlows].sort((a, b) => a.date.getTime() - b.date.getTime())
-  const hasNegative = sorted.some((cf) => cf.amount < 0)
-  const hasPositive = sorted.some((cf) => cf.amount > 0)
-  if (!hasNegative || !hasPositive) return null
+  if (!sorted.some((cf) => cf.amount < 0) || !sorted.some((cf) => cf.amount > 0)) return null
 
-  let rate = 0.1
-  for (let i = 0; i < MAX_ITERATIONS; i++) {
-    const value = npv(rate, sorted)
-    const derivative = npvDerivative(rate, sorted)
-    if (Math.abs(derivative) < 1e-12) break
-    const newRate = rate - value / derivative
-    if (Math.abs(newRate - rate) < TOLERANCE) return newRate
-    rate = newRate
+  // Try Newton-Raphson from several starting points to handle varied data patterns.
+  for (const guess of [0.1, 0.0, 0.5, -0.1, 2.0]) {
+    const result = newtonRaphson(sorted, guess)
+    if (result !== null && isFinite(result)) return result
   }
+
   return null
 }
