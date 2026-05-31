@@ -32,7 +32,8 @@ export default function App() {
       setTheme(settings.theme)
       setLanguage(settings.language)
       setBaseCurrency(settings.baseCurrency)
-      void i18n.changeLanguage(settings.language)
+      await i18n.changeLanguage(settings.language)
+      document.title = i18n.t('appTitle')
     })()
   }, [setTheme, setLanguage, setBaseCurrency])
 
