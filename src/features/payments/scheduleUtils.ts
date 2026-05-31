@@ -6,9 +6,8 @@ export async function regenerateSchedule(instrument: Instrument): Promise<void> 
   if (!instrument.id) return
 
   const lots = await db.purchaseLots.where('instrumentId').equals(instrument.id).toArray()
-  const principal = lots.reduce((sum, l) => sum + l.totalCost, 0)
 
-  const newRecords = generateSchedule(instrument, principal)
+  const newRecords = generateSchedule(instrument, lots)
 
   const existingRecords = await db.paymentRecords
     .where('instrumentId')

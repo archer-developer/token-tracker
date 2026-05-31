@@ -1,4 +1,4 @@
-import type { Instrument, PaymentFrequency, PaymentRecord } from '@/db/types'
+import type { Instrument, PaymentFrequency, PaymentRecord, PurchaseLot } from '@/db/types'
 
 // --- helpers ---
 
@@ -10,7 +10,7 @@ function daysInCalYear(year: number): number {
   return isLeapYear(year) ? 366 : 365
 }
 
-/** Inclusive day count between two dates (both in the same year assumed for monthly periods). */
+/** Inclusive day count between two dates. */
 function dayCount(start: Date, end: Date): number {
   return Math.round((end.getTime() - start.getTime()) / 86400000) + 1
 }
@@ -30,11 +30,8 @@ function windowForMonth(year: number, month: number, dayFrom: number, dayTo: num
 }
 
 /**
- * Calculates interest income for a period using the White Paper formula:
- *   СПД = Σ (principal × rate/100 × 1/КДГ)  for each day in [start, end]
- *
- * KDG (days in calendar year) may differ between start and end when a period
- * spans Dec 31 → Jan 1. For monthly periods this never happens, but handled anyway.
+ * Calculates interest income for a single sub-period with a fixed principal.
+ * Handles periods that span a Dec 31 → Jan 1 boundary.
  */
 function calcPeriodIncome(principal: number, rate: number, start: Date, end: Date): number {
   const sy = start.getFullYear()
@@ -53,6 +50,96 @@ function calcPeriodIncome(principal: number, rate: number, start: Date, end: Dat
   return (
     ((principal * rate) / 100) * (daysFirst / daysInCalYear(sy) + daysSecond / daysInCalYear(ey))
   )
+}
+
+/**
+ * Calculates coupon income for an accrual period using the White Paper formula:
+ *   СПД = Σ (СТВi × СД/100 × 1/КДГ)  for each day i in [periodStart, periodEnd]
+ *
+ * Where СТВi (amount invested on day i) changes when new purchase lots are added.
+ *
+ * Two kinds of lots are eligible:
+ *  - Lots purchased during [periodStart, periodEnd]: prorated from purchase date (breakpoints)
+ *  - Lots purchased after periodEnd but before paymentCutoff: "catch-up" lots — the platform
+ *    pays the full period income to whoever holds tokens at the payment date, so these
+ *    contribute as if they were purchased on periodStart.
+ */
+function calcIncomeForPeriod(
+  lots: PurchaseLot[],
+  rate: number,
+  periodStart: Date,
+  periodEnd: Date,
+  paymentCutoff: Date,
+): number {
+  const periodStartISO = toISO(periodStart)
+  const periodEndISO = toISO(periodEnd)
+  const paymentCutoffISO = toISO(paymentCutoff)
+
+  // All lots whose purchase date is on or before the payment cutoff
+  const eligible = [...lots]
+    .filter((l) => l.purchaseDate <= paymentCutoffISO)
+    .sort((a, b) => a.purchaseDate.localeCompare(b.purchaseDate))
+
+  if (eligible.length === 0) return 0
+
+  // Pre-period lots: active from the start of the period
+  const prePrincipal = eligible
+    .filter((l) => l.purchaseDate <= periodStartISO)
+    .reduce((sum, l) => sum + l.totalCost, 0)
+
+  // Catch-up lots: purchased after accrual end but before payment — full period income
+  const catchUpPrincipal = eligible
+    .filter((l) => l.purchaseDate > periodEndISO)
+    .reduce((sum, l) => sum + l.totalCost, 0)
+
+  // Base principal is active for the ENTIRE accrual period
+  const basePrincipal = prePrincipal + catchUpPrincipal
+
+  // Within-period lots create sub-period breakpoints (prorated from purchase date)
+  const withinPeriodLots = eligible.filter(
+    (l) => l.purchaseDate > periodStartISO && l.purchaseDate <= periodEndISO,
+  )
+
+  if (withinPeriodLots.length === 0) {
+    if (basePrincipal === 0) return 0
+    return calcPeriodIncome(basePrincipal, rate, periodStart, periodEnd)
+  }
+
+  const breakpointISOs = [...new Set(withinPeriodLots.map((l) => l.purchaseDate))].sort()
+
+  let totalIncome = 0
+  let subStartISO = periodStartISO
+
+  for (const bpISO of breakpointISOs) {
+    const subEndDate = new Date(bpISO)
+    subEndDate.setDate(subEndDate.getDate() - 1)
+    const subEndISO = toISO(subEndDate)
+
+    if (subEndISO >= subStartISO) {
+      const withinSub = withinPeriodLots
+        .filter((l) => l.purchaseDate <= subStartISO)
+        .reduce((sum, l) => sum + l.totalCost, 0)
+
+      const subPrincipal = basePrincipal + withinSub
+      if (subPrincipal > 0) {
+        totalIncome += calcPeriodIncome(subPrincipal, rate, new Date(subStartISO), subEndDate)
+      }
+    }
+
+    subStartISO = bpISO
+  }
+
+  // Final sub-period
+  const withinFinal = withinPeriodLots
+    .filter((l) => l.purchaseDate <= subStartISO)
+    .reduce((sum, l) => sum + l.totalCost, 0)
+
+  const finalPrincipal = basePrincipal + withinFinal
+  if (finalPrincipal > 0) {
+    totalIncome += calcPeriodIncome(finalPrincipal, rate, new Date(subStartISO), periodEnd)
+  }
+
+  return totalIncome
 }
 
 /** Round half up to `decimals` places, as specified in the White Paper. */
@@ -112,7 +199,7 @@ function paymentWindow(
 
 export function generateSchedule(
   instrument: Instrument,
-  principal: number,
+  lots: PurchaseLot[],
 ): Omit<PaymentRecord, 'id'>[] {
   const {
     id,
@@ -135,17 +222,25 @@ export function generateSchedule(
   while (accrualStart <= end) {
     const naturalEnd = periodEndDate(accrualStart, paymentFrequency, customFrequencyDays)
     const accrualEnd = naturalEnd <= end ? naturalEnd : end
-
-    const rawIncome = calcPeriodIncome(principal, couponRate, accrualStart, accrualEnd)
-    const income = roundHalfUp(rawIncome, 2)
-
     const isLastPeriod = accrualEnd >= end
+
     const { from: payFrom, to: payTo } = paymentWindow(
       accrualEnd,
       isLastPeriod,
       paymentDayFrom,
       paymentDayTo,
     )
+
+    // Pass paymentDateFrom as the cutoff: lots purchased before the payment date are eligible
+    // for catch-up income on past accrual periods they missed.
+    const rawIncome = calcIncomeForPeriod(
+      lots,
+      couponRate,
+      accrualStart,
+      accrualEnd,
+      new Date(payFrom),
+    )
+    const income = roundHalfUp(rawIncome, 2)
 
     records.push({
       instrumentId: id,
@@ -163,13 +258,14 @@ export function generateSchedule(
     periodIndex++
   }
 
+  const totalPrincipal = lots.reduce((sum, l) => sum + l.totalCost, 0)
   records.push({
     instrumentId: id,
     periodIndex: periodIndex + 0.5,
     type: 'redemption',
     paymentDateFrom: toISO(end),
     paymentDateTo: toISO(end),
-    expectedAmount: principal,
+    expectedAmount: totalPrincipal,
     status: 'scheduled',
   })
 

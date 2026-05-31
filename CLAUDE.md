@@ -103,25 +103,33 @@ Key types → `src/db/types.ts`:
 **The White Paper formula (GURMINA.USD.2024.01, section 4.9):**
 
 ```
-СПД = principal × (rate / 100) × daysInPeriod / daysInCalYear
+СПД = Σ (СТВi × rate/100 × 1/KDG)   for each day i in the period
 ```
 
-- `daysInCalYear` = 365, or **366** for leap years (2024, 2028…)
-- `daysInPeriod` = actual calendar days in the accrual period (inclusive)
+Where СТВi is the amount invested on day i (changes when new lots are purchased).
+If the lot balance changes mid-period (a lot purchased on day k), the period is split:
+
+```
+СПД = Σ_k [ principal_k × (rate/100) × days_k / KDG ]
+```
+
+- `KDG` = 365, or **366** for leap years (2024, 2028…)
+- `days_k` = actual calendar days in each sub-period (inclusive)
 - Rounding: **round half up** to 2 decimal places on the final sum (not per-day)
 - Period 1 starts on `instrument.startDate`, not on 1st of the month
 - Last period ends on `instrument.endDate`; if `endDate` is mid-month, the payment is in the **same** month (not the next)
-
-**❌ Wrong (old):** `principal × annualRate / 12` — ignores actual day counts and leap years  
-**✓ Correct (current):** day-count formula above
+- Days within a period before the first lot purchase have principal = 0 → income = 0 for those days
+- If a lot is purchased **after** the accrual period but **before `paymentDateFrom`**, the platform pays full catch-up income for that period (whoever holds tokens at payment date receives the coupon)
 
 **Verified against real GURMINA.USD.2024.01 payments** (see `docs/examples/gurnima-algorithm.md`):
 | Payment date | Period | Days | KDG | Principal | Amount |
 |---|---|---|---|---|---|
-| 15.02.2025 | Jan 2025 | 31 | 365 | 5 058 USD | **47.25** |
+| 15.02.2025 | Jan 2025 | 31 | 365 | weighted ≈ 5 058 USD/day | **47.25** |
 | 15.03.2026 | Feb 2026 | 28 | 365 | 10 040 USD | **84.72** |
 | 15.04.2026 | Mar 2026 | 31 | 365 | 10 040 USD | **93.80** |
 | 15.05.2026 | Apr 2026 | 30 | 365 | 10 040 USD | **90.77** |
+
+January 47.25 = 5 680×0.11×17/365 + 10 040×0.11×6/365 (Lot 1 from Jan 9, Lot 2 from Jan 26).
 
 ### Schedule Regeneration (`src/features/payments/scheduleUtils.ts`)
 
@@ -131,7 +139,7 @@ Key types → `src/db/types.ts`:
 - When adding / editing / deleting a purchase lot (PurchaseLotList)
 
 It **preserves** records with `status: 'paid' | 'missed'` (matched by `${periodIndex}:${type}`).
-Principal = sum of all purchase lot `totalCost` values.
+Passes the full `PurchaseLot[]` list to `generateSchedule`; per-period principal is derived from lot purchase dates.
 
 ### XIRR (`src/services/xirr/xirr.ts`)
 
@@ -214,24 +222,3 @@ Feature disabled if LLM settings are incomplete.
 - **No ORM-style relations** — foreign keys by convention (`instrumentId`), joined manually in hooks
 - **PWA** — service worker via vite-plugin-pwa, offline-capable, `@/icon-{192,512}.png` needed for install
 - **Backup / restore** — full JSON export/import in Settings; only path to move data between devices
-
----
-
-## Recent Changes (last session)
-
-**Fixed coupon calculation algorithm** (was using simplified `rate/12`, now uses correct day-count formula per the White Paper):
-
-- `src/features/payments/generateSchedule.ts` — full rewrite
-- `src/features/payments/generateSchedule.test.ts` — 17 tests, 4 GURMINA real-payment checks
-- `docs/examples/gurnima-algorithm.md` — extracted formula, schedule table, and example calculations from the PDF
-
-**Added Playwright**:
-
-- `playwright.config.ts`, `e2e/gurmina-schedule.spec.ts` — 3 e2e tests verifying UI shows correct amounts
-- `npm run test:e2e` script added
-
-**GURMINA.USD.2024.01 token** — the reference instrument in this codebase:
-
-- startDate: 2024-12-30, endDate: 2026-12-14
-- Rate: 11% p.a., monthly, payment window 15th–18th of following month
-- Current DB has ~502 tokens (10 040 USD); prior to top-up: ~253 tokens (5 058 USD)
