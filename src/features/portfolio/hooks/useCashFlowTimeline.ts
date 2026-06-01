@@ -12,9 +12,15 @@ export interface TimelinePoint {
   projected: number | null
 }
 
-function cvt(amount: number, from: Currency, to: Currency, rateMap: Map<string, number>): number {
+function cvt(
+  amount: number,
+  from: Currency,
+  to: Currency,
+  rateMap: Map<string, number>,
+  appliedRate?: number,
+): number {
   if (from === to) return amount
-  const fromRate = from === 'BYN' ? 1 : (rateMap.get(from) ?? 1)
+  const fromRate = from === 'BYN' ? 1 : (appliedRate ?? rateMap.get(from) ?? 1)
   const toRate = to === 'BYN' ? 1 : (rateMap.get(to) ?? 1)
   return (amount * fromRate) / toRate
 }
@@ -81,7 +87,7 @@ export function useCashFlowTimeline(): TimelinePoint[] {
       if (entry.type !== 'coupon' && entry.type !== 'recovery') continue
       const inst = instMap.get(entry.instrumentId)
       if (!inst) continue
-      const amt = cvt(entry.amount, inst.currency, baseCurrency, rateMap)
+      const amt = cvt(entry.amount, inst.currency, baseCurrency, rateMap, entry.appliedRate)
       addDelta(histDeltas, entry.date.slice(0, 7), amt)
     }
 

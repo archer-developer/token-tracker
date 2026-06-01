@@ -62,6 +62,7 @@ export interface LedgerEntry {
   date: string
   type: LedgerEntryType
   amount: number
+  appliedRate?: number
   notes?: string
   createdAt: string
 }

@@ -21,6 +21,7 @@ import { PurchaseLotList } from '@/features/purchaseLots/components/PurchaseLotL
 import { PaymentList } from '@/features/payments/components/PaymentList'
 import { db } from '@/db/db'
 import { formatDate, formatCurrency } from '@/shared/utils/format'
+import { getRateForDate } from '@/services/exchangeRates/NBRBClient'
 import type { InstrumentStatus, PaymentRecord, PaymentStatus } from '@/db/types'
 
 function statusBadgeVariant(status: InstrumentStatus): 'green' | 'blue' | 'red' | 'gray' {
@@ -114,6 +115,15 @@ export default function InstrumentDetailScreen() {
   async function handleConfirmMatured() {
     if (instrument?.id == null) return
     const now = new Date().toISOString()
+
+    // Pre-fetch historical rates for each unique payment date before the transaction
+    const currency = instrument.currency
+    const uniqueDates = [...new Set(maturedPayments.map((p) => p.paymentDateFrom))]
+    const rateByDate = new Map<string, number | undefined>()
+    for (const date of uniqueDates) {
+      rateByDate.set(date, await getRateForDate(currency, date))
+    }
+
     await db.transaction('rw', [db.instruments, db.paymentRecords, db.ledgerEntries], async () => {
       await db.instruments.update(instrument.id!, { status: 'matured', updatedAt: now })
       for (const p of maturedPayments) {
@@ -128,6 +138,7 @@ export default function InstrumentDetailScreen() {
           date: p.paymentDateFrom,
           type: p.type,
           amount: p.expectedAmount,
+          appliedRate: rateByDate.get(p.paymentDateFrom),
           createdAt: now,
         })
       }
@@ -373,7 +384,7 @@ export default function InstrumentDetailScreen() {
         <h2 className="mb-4 text-lg font-semibold text-gray-900 dark:text-gray-100">
           {t('payment.title')}
         </h2>
-        <PaymentList instrumentId={instrument.id!} />
+        <PaymentList instrumentId={instrument.id!} instrumentCurrency={instrument.currency} />
       </div>
 
       {/* Purchase lots */}

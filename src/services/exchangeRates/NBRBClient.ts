@@ -2,6 +2,7 @@ import type { Currency } from '@/db/types'
 import { db } from '@/db/db'
 
 const NBRB_URL = 'https://api.nbrb.by/exrates/rates?periodicity=0'
+const NBRB_RATE_URL = 'https://api.nbrb.by/exrates/rates'
 const CURRENCY_IDS: Record<Exclude<Currency, 'BYN'>, number> = {
   USD: 431,
   EUR: 451,
@@ -51,6 +52,35 @@ export async function fetchAndCacheRates(): Promise<void> {
       }
     }
   })
+}
+
+export async function fetchHistoricalRate(
+  currency: Exclude<Currency, 'BYN'>,
+  date: string,
+): Promise<number | null> {
+  const id = CURRENCY_IDS[currency]
+  try {
+    const response = await fetch(`${NBRB_RATE_URL}/${id}?ondate=${date}`)
+    if (!response.ok) return null
+    const data: NBRBRate = await response.json()
+    return data.Cur_OfficialRate / data.Cur_Scale
+  } catch {
+    return null
+  }
+}
+
+/** Returns the BYN rate for the given currency on the given date. Returns undefined for BYN. */
+export async function getRateForDate(
+  currency: Currency,
+  date: string,
+): Promise<number | undefined> {
+  if (currency === 'BYN') return undefined
+  const today = new Date().toISOString().slice(0, 10)
+  if (date >= today) {
+    return (await db.exchangeRates.get(currency))?.rate
+  }
+  const rate = await fetchHistoricalRate(currency, date)
+  return rate ?? undefined
 }
 
 export async function convertToCurrency(

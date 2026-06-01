@@ -1,9 +1,10 @@
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { CircleCheck, CircleX, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
-import type { PaymentRecord, PaymentStatus } from '@/db/types'
+import type { Currency, PaymentRecord, PaymentStatus } from '@/db/types'
 import { usePayments } from '@/features/payments/hooks/usePayments'
 import { db } from '@/db/db'
+import { getRateForDate } from '@/services/exchangeRates/NBRBClient'
 import { Badge } from '@/shared/components/Badge'
 import { Button } from '@/shared/components/Button'
 import { Input } from '@/shared/components/Input'
@@ -14,6 +15,7 @@ import { useUIStore } from '@/store/uiStore'
 
 interface Props {
   instrumentId: number
+  instrumentCurrency: Currency
 }
 
 type Tab = 'upcoming' | 'history'
@@ -38,7 +40,7 @@ interface MarkPaidState {
   paidAt: string
 }
 
-export function PaymentList({ instrumentId }: Props) {
+export function PaymentList({ instrumentId, instrumentCurrency }: Props) {
   const { t } = useTranslation()
   const { baseCurrency } = useUIStore()
   const payments = usePayments(instrumentId)
@@ -94,6 +96,7 @@ export function PaymentList({ instrumentId }: Props) {
 
     setSaving(true)
     try {
+      const appliedRate = await getRateForDate(instrumentCurrency, paidAt)
       await db.transaction('rw', [db.paymentRecords, db.ledgerEntries], async () => {
         if (payment.id) {
           await db.paymentRecords.update(payment.id, {
@@ -107,6 +110,7 @@ export function PaymentList({ instrumentId }: Props) {
           date: paidAt,
           type: payment.type,
           amount,
+          appliedRate,
           createdAt: new Date().toISOString(),
         })
       })

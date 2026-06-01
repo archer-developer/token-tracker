@@ -10,6 +10,7 @@ import { usePurchaseLots } from '@/features/purchaseLots/hooks/usePurchaseLots'
 import { db } from '@/db/db'
 import { regenerateSchedule } from '@/features/payments/scheduleUtils'
 import { formatDate, formatCurrency } from '@/shared/utils/format'
+import { getRateForDate } from '@/services/exchangeRates/NBRBClient'
 import type { Currency, PurchaseLot } from '@/db/types'
 
 interface Props {
@@ -101,6 +102,7 @@ export function PurchaseLotList({ instrumentId, currency, tokenPrice }: Props) {
       const pricePerToken = Number(form.pricePerToken)
       const totalCost = quantity * pricePerToken
       const now = new Date().toISOString()
+      const appliedRate = await getRateForDate(currency, form.purchaseDate)
 
       if (editingLot?.id != null) {
         // Update lot
@@ -122,6 +124,7 @@ export function PurchaseLotList({ instrumentId, currency, tokenPrice }: Props) {
           await db.ledgerEntries.update(oldEntry.id, {
             date: form.purchaseDate,
             amount: -totalCost,
+            appliedRate,
           })
         } else {
           // create if missing
@@ -130,6 +133,7 @@ export function PurchaseLotList({ instrumentId, currency, tokenPrice }: Props) {
             date: form.purchaseDate,
             type: 'purchase',
             amount: -totalCost,
+            appliedRate,
             createdAt: now,
           })
         }
@@ -150,6 +154,7 @@ export function PurchaseLotList({ instrumentId, currency, tokenPrice }: Props) {
           date: form.purchaseDate,
           type: 'purchase',
           amount: -totalCost,
+          appliedRate,
           createdAt: now,
         })
       }

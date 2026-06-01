@@ -1,7 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db/db'
 import { xirr } from '@/services/xirr/xirr'
-import { convertToCurrency } from '@/services/exchangeRates/NBRBClient'
 import { useUIStore } from '@/store/uiStore'
 import type { Currency, Instrument, LedgerEntry, PaymentRecord } from '@/db/types'
 
@@ -30,18 +29,15 @@ export interface PortfolioMetrics {
 const SCENARIO_RATES = [0, 0.25, 0.5, 0.75, 1.0]
 const SCENARIO_LABELS = ['Worst', 'Conservative', 'Moderate', 'Optimistic', 'Full Recovery']
 
-async function toBase(amount: number, from: Currency, to: Currency): Promise<number> {
-  return convertToCurrency(amount, from, to)
-}
-
 export function usePortfolioMetrics(): PortfolioMetrics {
   const { baseCurrency } = useUIStore()
 
   const result = useLiveQuery(async () => {
-    const [instruments, ledgerEntries, paymentRecords] = await Promise.all([
+    const [instruments, ledgerEntries, paymentRecords, exchangeRates] = await Promise.all([
       db.instruments.toArray(),
       db.ledgerEntries.toArray(),
       db.paymentRecords.toArray(),
+      db.exchangeRates.toArray(),
     ])
 
     if (instruments.length === 0) {
@@ -61,6 +57,21 @@ export function usePortfolioMetrics(): PortfolioMetrics {
         scenarioXIRRs: SCENARIO_LABELS.map((label) => ({ label, rate: null })),
         isLoading: false,
       }
+    }
+
+    // Pre-load current exchange rates
+    const rateMap = new Map<string, number>()
+    for (const r of exchangeRates) rateMap.set(r.currency, r.rate)
+
+    // Convert amount to baseCurrency.
+    // appliedRate: historical BYN rate of the source currency (from ledger entry).
+    // When undefined, falls back to the current rate from rateMap.
+    function toBase(amount: number, from: Currency, appliedRate?: number): number {
+      if (from === baseCurrency) return amount
+      const fromRate = from === 'BYN' ? 1 : (appliedRate ?? rateMap.get(from) ?? 1)
+      const fromBYN = amount * fromRate
+      if (baseCurrency === 'BYN') return fromBYN
+      return fromBYN / (rateMap.get(baseCurrency) ?? 1)
     }
 
     // Group ledger entries by instrument
@@ -91,7 +102,6 @@ export function usePortfolioMetrics(): PortfolioMetrics {
       counts[inst.status]++
     }
 
-    // Per-instrument calculations (all in instrument's own currency first, convert later)
     let totalInvested = 0
     let activePrincipal = 0
     let repaidPrincipal = 0
@@ -106,6 +116,7 @@ export function usePortfolioMetrics(): PortfolioMetrics {
       const entries = ledgerByInstrument.get(inst.id) ?? []
       const currency = inst.currency
 
+      // Convert each entry individually using its historical appliedRate
       let purchases = 0
       let coupons = 0
       let redemptions = 0
@@ -115,44 +126,34 @@ export function usePortfolioMetrics(): PortfolioMetrics {
       for (const e of entries) {
         switch (e.type) {
           case 'purchase':
-            purchases += -e.amount // stored as -totalCost; negate to get positive total
+            purchases += toBase(-e.amount, currency, e.appliedRate)
             break
           case 'coupon':
-            coupons += e.amount
+            coupons += toBase(e.amount, currency, e.appliedRate)
             break
           case 'redemption':
-            redemptions += e.amount
+            redemptions += toBase(e.amount, currency, e.appliedRate)
             break
           case 'recovery':
-            recoveries += e.amount
+            recoveries += toBase(e.amount, currency, e.appliedRate)
             break
           case 'sale':
-            sales += e.amount
+            sales += toBase(e.amount, currency, e.appliedRate)
             break
         }
       }
 
-      const purchasesBase = await toBase(purchases, currency, baseCurrency)
-      const couponsBase = await toBase(coupons, currency, baseCurrency)
-      const redemptionsBase = await toBase(redemptions, currency, baseCurrency)
-      const recoveriesBase = await toBase(recoveries, currency, baseCurrency)
-      const salesBase = await toBase(sales, currency, baseCurrency)
-
-      totalInvested += purchasesBase
+      totalInvested += purchases
 
       if (inst.status === 'active') {
-        // Active principal = purchases - redemptions received
-        const outstandingBase = purchasesBase - redemptionsBase
+        const outstandingBase = purchases - redemptions
         activePrincipal += outstandingBase
-
-        // Unrealized P&L: coupons received + outstanding estimated value (face) - cost basis
-        // Simple estimate: outstanding face value + coupons - cost
-        unrealizedPL += couponsBase + outstandingBase - purchasesBase
+        unrealizedPL += coupons + outstandingBase - purchases
       }
 
       if (inst.status === 'matured' || inst.status === 'sold') {
-        repaidPrincipal += redemptionsBase + recoveriesBase
-        const plForInst = couponsBase + redemptionsBase + recoveriesBase + salesBase - purchasesBase
+        repaidPrincipal += redemptions + recoveries
+        const plForInst = coupons + redemptions + recoveries + sales - purchases
         realizedPL += plForInst
         if (plForInst < 0) {
           if (worstInstrumentPL === null || plForInst < worstInstrumentPL) {
@@ -162,15 +163,14 @@ export function usePortfolioMetrics(): PortfolioMetrics {
       }
 
       if (inst.status === 'defaulted') {
+        // Outstanding principal estimate uses current rate (not a historical fact)
         const outstandingRaw = inst.defaultOutstandingPrincipal ?? purchases
-        const outstandingBase = await toBase(outstandingRaw, currency, baseCurrency)
+        const outstandingBase = toBase(outstandingRaw, currency)
         defaultedPrincipal += outstandingBase
 
-        const recoveredBase = recoveriesBase
-        recoveredPrincipal += recoveredBase
+        recoveredPrincipal += recoveries
 
-        // Realized loss on defaulted: recovered + coupons - purchases
-        const plForInst = couponsBase + recoveredBase - purchasesBase
+        const plForInst = coupons + recoveries - purchases
         realizedPL += plForInst
         if (plForInst < 0) {
           if (worstInstrumentPL === null || plForInst < worstInstrumentPL) {
@@ -181,31 +181,26 @@ export function usePortfolioMetrics(): PortfolioMetrics {
     }
 
     const portfolioValue = activePrincipal + repaidPrincipal + recoveredPrincipal
-
     const recoveryRatio = defaultedPrincipal > 0 ? recoveredPrincipal / defaultedPrincipal : null
 
-    // Build cash flows for portfolio XIRR
+    // Build cash flows for portfolio XIRR — use appliedRate for historical entries
     const historicalFlows: { date: Date; amount: number }[] = []
     for (const entry of ledgerEntries) {
       const inst = instrumentMap.get(entry.instrumentId)
       if (!inst) continue
-      // entry.amount is already signed correctly: purchases are stored as -totalCost
-      // (negative = money out), coupons/redemptions as positive (money in).
-      const amtBase = await toBase(entry.amount, inst.currency, baseCurrency)
+      // entry.amount is signed correctly: purchases are negative, income positive
+      const amtBase = toBase(entry.amount, inst.currency, entry.appliedRate)
       historicalFlows.push({ date: new Date(entry.date), amount: amtBase })
     }
 
-    // Add all remaining scheduled payments for active instruments.
-    // Overdue but unpaid scheduled payments (incl. redemption) are still expected
-    // from active instruments — excluding them would make NPV always negative and
-    // break XIRR convergence when the payment window has already passed.
+    // Future scheduled payments for active instruments — use current rate
     const futureFlows: { date: Date; amount: number }[] = []
     for (const inst of instruments) {
       if (inst.status !== 'active' || inst.id == null) continue
       const payments = paymentsByInstrument.get(inst.id) ?? []
       for (const p of payments) {
         if (p.status !== 'scheduled' || p.expectedAmount <= 0) continue
-        const amtBase = await toBase(p.expectedAmount, inst.currency, baseCurrency)
+        const amtBase = toBase(p.expectedAmount, inst.currency)
         if (amtBase > 0) {
           futureFlows.push({ date: new Date(p.paymentDateTo), amount: amtBase })
         }
@@ -230,18 +225,17 @@ export function usePortfolioMetrics(): PortfolioMetrics {
           let purchases = 0
           let recoveries = 0
           for (const e of entries) {
-            if (e.type === 'purchase') purchases += -e.amount
-            if (e.type === 'recovery') recoveries += e.amount
+            if (e.type === 'purchase') purchases += toBase(-e.amount, inst.currency, e.appliedRate)
+            if (e.type === 'recovery') recoveries += toBase(e.amount, inst.currency, e.appliedRate)
           }
           const outstandingRaw = inst.defaultOutstandingPrincipal ?? purchases
-          const alreadyRecovered = recoveries
-          const additionalRecovery = outstandingRaw * recoveryRate - alreadyRecovered
+          const outstandingBase = toBase(outstandingRaw, inst.currency)
+          const additionalRecovery = outstandingBase * recoveryRate - recoveries
           if (additionalRecovery > 0) {
             const recoveryDate = inst.expectedRecoveryDate
               ? new Date(inst.expectedRecoveryDate)
               : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-            const amtBase = await toBase(additionalRecovery, inst.currency, baseCurrency)
-            scenarioFlows.push({ date: recoveryDate, amount: amtBase })
+            scenarioFlows.push({ date: recoveryDate, amount: additionalRecovery })
           }
         }
 
