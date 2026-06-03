@@ -1,15 +1,15 @@
-import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LayoutDashboard } from 'lucide-react'
 import {
   ResponsiveContainer,
   ComposedChart,
-  Area,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ReferenceLine,
+  Cell,
 } from 'recharts'
 import { useUIStore } from '@/store/uiStore'
 import { EmptyState } from '@/shared/components/EmptyState'
@@ -97,15 +97,6 @@ function PnLChart({
 }) {
   const { t } = useTranslation()
 
-  const allValues = useMemo(
-    () => data.flatMap((d) => [d.historical, d.projected]).filter((v): v is number => v != null),
-    [data],
-  )
-
-  const max = allValues.length ? Math.max(...allValues, 0) : 0
-  const min = allValues.length ? Math.min(...allValues, 0) : 0
-  const gradientOffset = max === min ? 1 : max / (max - min)
-
   // X-axis: show ~10 labels max
   const tickInterval = Math.max(1, Math.floor(data.length / 10))
 
@@ -120,21 +111,6 @@ function PnLChart({
   return (
     <ResponsiveContainer width="100%" height={280}>
       <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-        <defs>
-          <linearGradient id="pnlHistGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset={0} stopColor="#22c55e" stopOpacity={0.25} />
-            <stop offset={gradientOffset} stopColor="#22c55e" stopOpacity={0.25} />
-            <stop offset={gradientOffset} stopColor="#ef4444" stopOpacity={0.25} />
-            <stop offset={1} stopColor="#ef4444" stopOpacity={0.25} />
-          </linearGradient>
-          <linearGradient id="pnlProjGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset={0} stopColor="#22c55e" stopOpacity={0.1} />
-            <stop offset={gradientOffset} stopColor="#22c55e" stopOpacity={0.1} />
-            <stop offset={gradientOffset} stopColor="#ef4444" stopOpacity={0.1} />
-            <stop offset={1} stopColor="#ef4444" stopOpacity={0.1} />
-          </linearGradient>
-        </defs>
-
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.6} />
 
         <XAxis
@@ -166,31 +142,27 @@ function PnLChart({
         {/* Break-even line */}
         <ReferenceLine y={0} stroke="#6b7280" strokeWidth={1.5} strokeDasharray="5 3" />
 
-        {/* Historical — solid line */}
-        <Area
-          dataKey="historical"
-          stroke="#6366f1"
-          strokeWidth={2}
-          fill="url(#pnlHistGrad)"
-          dot={false}
-          activeDot={{ r: 4, fill: '#6366f1' }}
-          connectNulls
-          isAnimationActive={false}
-        />
+        {/* Historical — colored by value */}
+        <Bar dataKey="historical" isAnimationActive={false}>
+          {data.map((entry, index) => (
+            <Cell
+              key={`hist-${index}`}
+              fill={entry.historical != null && entry.historical >= 0 ? '#22c55e' : '#ef4444'}
+              opacity={0.25}
+            />
+          ))}
+        </Bar>
 
-        {/* Projected — dashed line, lighter fill */}
-        <Area
-          dataKey="projected"
-          stroke="#6366f1"
-          strokeWidth={2}
-          strokeDasharray="6 3"
-          strokeOpacity={0.6}
-          fill="url(#pnlProjGrad)"
-          dot={false}
-          activeDot={{ r: 4, fill: '#6366f1' }}
-          connectNulls
-          isAnimationActive={false}
-        />
+        {/* Projected — colored by value, lighter */}
+        <Bar dataKey="projected" isAnimationActive={false}>
+          {data.map((entry, index) => (
+            <Cell
+              key={`proj-${index}`}
+              fill={entry.projected != null && entry.projected >= 0 ? '#22c55e' : '#ef4444'}
+              opacity={0.1}
+            />
+          ))}
+        </Bar>
       </ComposedChart>
     </ResponsiveContainer>
   )
