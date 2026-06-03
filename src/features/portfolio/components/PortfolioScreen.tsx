@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LayoutDashboard } from 'lucide-react'
 import {
@@ -89,6 +90,39 @@ function PnLTooltip({
   )
 }
 
+interface CustomXAxisTickProps {
+  x: number
+  y: number
+  payload: { value: string; index: number }
+  isMobile: boolean
+  data: ReturnType<typeof useCashFlowTimeline>
+}
+
+function CustomXAxisTick({
+  x,
+  y,
+  payload,
+  isMobile,
+  data,
+}: CustomXAxisTickProps): JSX.Element | null {
+  if (!isMobile) return null
+
+  const dataPoint = data[payload.index]
+  if (!dataPoint) return null
+
+  const [, month] = dataPoint.monthISO.split('-')
+  const monthNum = Number(month)
+
+  // Mobile: show January only
+  if (monthNum !== 1) return null
+
+  return (
+    <text x={x} y={y} textAnchor="middle" dominantBaseline="hanging" fontSize={11} fill="#9ca3af">
+      {dataPoint.labelMobile}
+    </text>
+  )
+}
+
 function PnLChart({
   data,
   baseCurrency,
@@ -97,6 +131,16 @@ function PnLChart({
   baseCurrency: Currency
 }) {
   const { t } = useTranslation()
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // X-axis: show ~10 labels max
   const tickInterval = Math.max(1, Math.floor(data.length / 10))
@@ -116,10 +160,16 @@ function PnLChart({
 
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 11, fill: '#9ca3af' }}
+          tick={
+            isMobile
+              ? (props: CustomXAxisTickProps) => (
+                  <CustomXAxisTick {...props} isMobile={isMobile} data={data} />
+                )
+              : { fontSize: 11, fill: '#9ca3af' }
+          }
           tickLine={false}
           axisLine={false}
-          interval={tickInterval}
+          interval={isMobile ? 0 : tickInterval}
         />
 
         <YAxis
