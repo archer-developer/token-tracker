@@ -4,6 +4,7 @@ import {
   ResponsiveContainer,
   ComposedChart,
   Bar,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -148,7 +149,7 @@ function PnLChart({
             <Cell
               key={`hist-${index}`}
               fill={entry.historical != null && entry.historical >= 0 ? '#22c55e' : '#ef4444'}
-              opacity={0.25}
+              opacity={0.5}
               stroke={entry.historical != null && entry.historical >= 0 ? '#16a34a' : '#dc2626'}
               strokeWidth={2}
             />
@@ -161,13 +162,35 @@ function PnLChart({
             <Cell
               key={`proj-${index}`}
               fill={entry.projected != null && entry.projected >= 0 ? '#22c55e' : '#ef4444'}
-              opacity={0.1}
+              opacity={0.25}
               stroke={entry.projected != null && entry.projected >= 0 ? '#16a34a' : '#dc2626'}
               strokeWidth={2}
               strokeOpacity={0.6}
             />
           ))}
         </Bar>
+
+        {/* Line overlay for historical data */}
+        <Line
+          dataKey="historical"
+          stroke="#6366f1"
+          strokeWidth={2.5}
+          dot={false}
+          isAnimationActive={false}
+          connectNulls
+        />
+
+        {/* Line overlay for projected data (dashed) */}
+        <Line
+          dataKey="projected"
+          stroke="#6366f1"
+          strokeWidth={2.5}
+          strokeDasharray="6 3"
+          strokeOpacity={0.6}
+          dot={false}
+          isAnimationActive={false}
+          connectNulls
+        />
       </ComposedChart>
     </ResponsiveContainer>
   )
