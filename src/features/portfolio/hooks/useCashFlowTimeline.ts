@@ -6,6 +6,7 @@ import type { Currency } from '@/db/types'
 export interface TimelinePoint {
   monthISO: string
   label: string
+  labelMobile: string
   /** Cumulative net P&L for months up to and including today */
   historical: number | null
   /** Cumulative net P&L for months after today (projected) */
@@ -25,6 +26,11 @@ function isoToLabel(iso: string): string {
     month: 'short',
     year: '2-digit',
   })
+}
+
+function isoToLabelMobile(iso: string): string {
+  const [y, m] = iso.split('-')
+  return `${m}/${y.slice(-2)}`
 }
 
 function monthRange(start: string, end: string): string[] {
@@ -154,6 +160,7 @@ export function useCashFlowTimeline(): TimelinePoint[] {
         points.push({
           monthISO: month,
           label: isoToLabel(month),
+          labelMobile: isoToLabelMobile(month),
           historical: cumulative,
           projected: isSeam ? cumulative : null,
         })
@@ -162,6 +169,7 @@ export function useCashFlowTimeline(): TimelinePoint[] {
         points.push({
           monthISO: month,
           label: isoToLabel(month),
+          labelMobile: isoToLabelMobile(month),
           historical: null,
           projected: cumulative,
         })

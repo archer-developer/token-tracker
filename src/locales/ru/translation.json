@@ -135,7 +135,15 @@
     "chartProjected": "прогноз",
     "chartProfit": "прибыль",
     "chartLoss": "убыток",
-    "chartNoData": "Нет данных для отображения"
+    "chartNoData": "Нет данных для отображения",
+    "scenariosTitle": "Сценарии XIRR",
+    "scenarioColumn": "Сценарий",
+    "recoveryRateColumn": "Уровень возврата",
+    "scenario_worst": "Худший случай",
+    "scenario_conservative": "Консервативный",
+    "scenario_moderate": "Умеренный",
+    "scenario_optimistic": "Оптимистичный",
+    "scenario_fullRecovery": "Полный возврат"
   },
   "calendar": {
     "title": "Календарь выплат",

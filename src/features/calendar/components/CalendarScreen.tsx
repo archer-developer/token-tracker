@@ -339,12 +339,7 @@ export default function CalendarScreen() {
             {activeCurrencies.map((currency) => {
               const totals = currencyTotals.get(currency)!
               return (
-                <div key={currency} className="grid grid-cols-4 items-center gap-3">
-                  <div>
-                    <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-                      {currency}
-                    </span>
-                  </div>
+                <div key={currency} className="grid grid-cols-3 items-center gap-3">
                   <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {t('calendar.expected')}
@@ -374,37 +369,39 @@ export default function CalendarScreen() {
             })}
 
             {activeCurrencies.length > 1 && (
-              <div className="grid grid-cols-4 items-center gap-3 border-t border-gray-200 pt-2 dark:border-gray-700">
-                <div>
+              <>
+                <div className="border-t border-gray-200 pt-2 dark:border-gray-700">
                   <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
                     {t('calendar.total')} {displayCurrency}
                   </span>
                 </div>
-                <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t('calendar.expected')}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-gray-900 tabular-nums dark:text-gray-100">
-                    {formatCurrency(grandExpected, displayCurrency)}
-                  </p>
+                <div className="grid grid-cols-3 items-center gap-3">
+                  <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {t('calendar.expected')}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-gray-900 tabular-nums dark:text-gray-100">
+                      {formatCurrency(grandExpected, displayCurrency)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {t('payment.status_paid')}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-green-600 tabular-nums dark:text-green-400">
+                      {formatCurrency(grandPaid, displayCurrency)}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {t('payment.status_missed')}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-red-600 tabular-nums dark:text-red-400">
+                      {formatCurrency(grandMissed, displayCurrency)}
+                    </p>
+                  </div>
                 </div>
-                <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t('payment.status_paid')}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-green-600 tabular-nums dark:text-green-400">
-                    {formatCurrency(grandPaid, displayCurrency)}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {t('payment.status_missed')}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-red-600 tabular-nums dark:text-red-400">
-                    {formatCurrency(grandMissed, displayCurrency)}
-                  </p>
-                </div>
-              </div>
+              </>
             )}
           </div>
         )}

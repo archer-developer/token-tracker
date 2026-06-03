@@ -1,15 +1,17 @@
-import { useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LayoutDashboard } from 'lucide-react'
 import {
   ResponsiveContainer,
   ComposedChart,
-  Area,
+  Bar,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ReferenceLine,
+  Cell,
 } from 'recharts'
 import { useUIStore } from '@/store/uiStore'
 import { EmptyState } from '@/shared/components/EmptyState'
@@ -60,8 +62,8 @@ function PnLTooltip({
   label,
   baseCurrency,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   active?: boolean
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   payload?: readonly any[]
   label?: string | number
   baseCurrency: Currency
@@ -88,6 +90,39 @@ function PnLTooltip({
   )
 }
 
+interface CustomXAxisTickProps {
+  x: number
+  y: number
+  payload: { value: string; index: number }
+  isMobile: boolean
+  data: ReturnType<typeof useCashFlowTimeline>
+}
+
+function CustomXAxisTick({
+  x,
+  y,
+  payload,
+  isMobile,
+  data,
+}: CustomXAxisTickProps): JSX.Element | null {
+  if (!isMobile) return null
+
+  const dataPoint = data[payload.index]
+  if (!dataPoint) return null
+
+  const [, month] = dataPoint.monthISO.split('-')
+  const monthNum = Number(month)
+
+  // Mobile: show January only
+  if (monthNum !== 1) return null
+
+  return (
+    <text x={x} y={y} textAnchor="middle" dominantBaseline="hanging" fontSize={11} fill="#9ca3af">
+      {dataPoint.labelMobile}
+    </text>
+  )
+}
+
 function PnLChart({
   data,
   baseCurrency,
@@ -96,15 +131,16 @@ function PnLChart({
   baseCurrency: Currency
 }) {
   const { t } = useTranslation()
+  const [isMobile, setIsMobile] = useState(false)
 
-  const allValues = useMemo(
-    () => data.flatMap((d) => [d.historical, d.projected]).filter((v): v is number => v != null),
-    [data],
-  )
-
-  const max = allValues.length ? Math.max(...allValues, 0) : 0
-  const min = allValues.length ? Math.min(...allValues, 0) : 0
-  const gradientOffset = max === min ? 1 : max / (max - min)
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // X-axis: show ~10 labels max
   const tickInterval = Math.max(1, Math.floor(data.length / 10))
@@ -120,25 +156,25 @@ function PnLChart({
   return (
     <ResponsiveContainer width="100%" height={280}>
       <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-        <defs>
-          <linearGradient id="pnlHistGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset={gradientOffset} stopColor="#22c55e" stopOpacity={0.25} />
-            <stop offset={gradientOffset} stopColor="#ef4444" stopOpacity={0.25} />
-          </linearGradient>
-          <linearGradient id="pnlProjGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset={gradientOffset} stopColor="#22c55e" stopOpacity={0.1} />
-            <stop offset={gradientOffset} stopColor="#ef4444" stopOpacity={0.1} />
-          </linearGradient>
-        </defs>
-
-        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.6} />
+        <CartesianGrid
+          strokeDasharray="3 3"
+          stroke="#e5e7eb"
+          strokeOpacity={0.6}
+          vertical={false}
+        />
 
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 11, fill: '#9ca3af' }}
+          tick={
+            isMobile
+              ? (props: CustomXAxisTickProps) => (
+                  <CustomXAxisTick {...props} isMobile={isMobile} data={data} />
+                )
+              : { fontSize: 11, fill: '#9ca3af' }
+          }
           tickLine={false}
           axisLine={false}
-          interval={tickInterval}
+          interval={isMobile ? 0 : tickInterval}
         />
 
         <YAxis
@@ -162,30 +198,53 @@ function PnLChart({
         {/* Break-even line */}
         <ReferenceLine y={0} stroke="#6b7280" strokeWidth={1.5} strokeDasharray="5 3" />
 
-        {/* Historical — solid line */}
-        <Area
+        {/* Historical — colored by value */}
+        <Bar dataKey="historical" isAnimationActive={false}>
+          {data.map((entry, index) => (
+            <Cell
+              key={`hist-${index}`}
+              fill={entry.historical != null && entry.historical >= 0 ? '#22c55e' : '#ef4444'}
+              opacity={0.5}
+              stroke={entry.historical != null && entry.historical >= 0 ? '#16a34a' : '#dc2626'}
+              strokeWidth={2}
+            />
+          ))}
+        </Bar>
+
+        {/* Projected — colored by value, lighter */}
+        <Bar dataKey="projected" isAnimationActive={false}>
+          {data.map((entry, index) => (
+            <Cell
+              key={`proj-${index}`}
+              fill={entry.projected != null && entry.projected >= 0 ? '#22c55e' : '#ef4444'}
+              opacity={0.25}
+              stroke={entry.projected != null && entry.projected >= 0 ? '#16a34a' : '#dc2626'}
+              strokeWidth={2}
+              strokeOpacity={0.6}
+            />
+          ))}
+        </Bar>
+
+        {/* Line overlay for historical data */}
+        <Line
           dataKey="historical"
           stroke="#6366f1"
-          strokeWidth={2}
-          fill="url(#pnlHistGrad)"
+          strokeWidth={2.5}
           dot={false}
-          activeDot={{ r: 4, fill: '#6366f1' }}
-          connectNulls
           isAnimationActive={false}
+          connectNulls
         />
 
-        {/* Projected — dashed line, lighter fill */}
-        <Area
+        {/* Line overlay for projected data (dashed) */}
+        <Line
           dataKey="projected"
           stroke="#6366f1"
-          strokeWidth={2}
+          strokeWidth={2.5}
           strokeDasharray="6 3"
           strokeOpacity={0.6}
-          fill="url(#pnlProjGrad)"
           dot={false}
-          activeDot={{ r: 4, fill: '#6366f1' }}
-          connectNulls
           isAnimationActive={false}
+          connectNulls
         />
       </ComposedChart>
     </ResponsiveContainer>
@@ -296,10 +355,10 @@ export default function PortfolioScreen() {
             </span>
             <span className="flex items-center gap-1.5">
               <span
-                className="inline-block h-0.5 w-4 bg-indigo-500 opacity-60"
+                className="inline-block h-0.5 w-4 opacity-60"
                 style={{
                   backgroundImage:
-                    'repeating-linear-gradient(90deg,#6366f1 0,#6366f1 4px,transparent 4px,transparent 7px)',
+                    'repeating-linear-gradient(90deg,#6366f1 0,#6366f1 3px,transparent 3px,transparent 6px)',
                 }}
               />
               {t('portfolio.chartProjected')}
@@ -358,17 +417,17 @@ export default function PortfolioScreen() {
           {/* XIRR scenarios */}
           <div className="mt-8">
             <h2 className="mb-3 text-sm font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
-              XIRR Scenarios
+              {t('portfolio.scenariosTitle')}
             </h2>
             <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
                     <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
-                      Scenario
+                      {t('portfolio.scenarioColumn')}
                     </th>
                     <th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">
-                      Recovery Rate
+                      {t('portfolio.recoveryRateColumn')}
                     </th>
                     <th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">
                       {t('portfolio.xirr')}
@@ -384,10 +443,20 @@ export default function PortfolioScreen() {
                         : rateVal > 0
                           ? 'text-green-600 dark:text-green-400'
                           : 'text-red-600 dark:text-red-400'
+                    const scenarioKeys: Record<string, string> = {
+                      Worst: 'portfolio.scenario_worst',
+                      Conservative: 'portfolio.scenario_conservative',
+                      Moderate: 'portfolio.scenario_moderate',
+                      Optimistic: 'portfolio.scenario_optimistic',
+                      'Full Recovery': 'portfolio.scenario_fullRecovery',
+                    }
+                    const translatedLabel = t(
+                      scenarioKeys[scenario.label] ?? 'portfolio.scenario_worst',
+                    )
                     return (
                       <tr key={scenario.label} className="bg-white dark:bg-gray-900">
                         <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
-                          {scenario.label}
+                          {translatedLabel}
                         </td>
                         <td className="px-4 py-3 text-right text-gray-600 tabular-nums dark:text-gray-300">
                           {idx * 25}%
