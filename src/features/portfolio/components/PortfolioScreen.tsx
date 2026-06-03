@@ -358,17 +358,17 @@ export default function PortfolioScreen() {
           {/* XIRR scenarios */}
           <div className="mt-8">
             <h2 className="mb-3 text-sm font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
-              XIRR Scenarios
+              {t('portfolio.scenariosTitle')}
             </h2>
             <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
                     <th className="px-4 py-3 text-left font-medium text-gray-500 dark:text-gray-400">
-                      Scenario
+                      {t('portfolio.scenarioColumn')}
                     </th>
                     <th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">
-                      Recovery Rate
+                      {t('portfolio.recoveryRateColumn')}
                     </th>
                     <th className="px-4 py-3 text-right font-medium text-gray-500 dark:text-gray-400">
                       {t('portfolio.xirr')}
@@ -384,10 +384,20 @@ export default function PortfolioScreen() {
                         : rateVal > 0
                           ? 'text-green-600 dark:text-green-400'
                           : 'text-red-600 dark:text-red-400'
+                    const scenarioKeys: Record<string, string> = {
+                      Worst: 'portfolio.scenario_worst',
+                      Conservative: 'portfolio.scenario_conservative',
+                      Moderate: 'portfolio.scenario_moderate',
+                      Optimistic: 'portfolio.scenario_optimistic',
+                      'Full Recovery': 'portfolio.scenario_fullRecovery',
+                    }
+                    const translatedLabel = t(
+                      scenarioKeys[scenario.label] ?? 'portfolio.scenario_worst',
+                    )
                     return (
                       <tr key={scenario.label} className="bg-white dark:bg-gray-900">
                         <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">
-                          {scenario.label}
+                          {translatedLabel}
                         </td>
                         <td className="px-4 py-3 text-right text-gray-600 tabular-nums dark:text-gray-300">
                           {idx * 25}%
