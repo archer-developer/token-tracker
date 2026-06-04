@@ -13,6 +13,7 @@ import {
   Upload,
   Eye,
   EyeOff,
+  ChevronDown,
 } from 'lucide-react'
 import type { Currency, Language, Theme } from '@/db/types'
 import { useSettings } from '@/features/settings/hooks/useSettings'
@@ -45,6 +46,7 @@ export function SettingsScreen() {
   const [llmSaving, setLlmSaving] = useState(false)
   const [llmTesting, setLlmTesting] = useState(false)
   const [llmTestResult, setLlmTestResult] = useState<'success' | 'error' | null>(null)
+  const [llmExpanded, setLlmExpanded] = useState(false)
 
   // Backup
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -187,14 +189,14 @@ export function SettingsScreen() {
                 <button
                   key={opt.value}
                   onClick={() => setTheme(opt.value)}
-                  className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors ${
+                  className={`flex items-center justify-center gap-0 px-3 py-2 text-sm font-medium transition-colors md:gap-1.5 md:px-4 ${
                     theme === opt.value
                       ? 'bg-indigo-600 text-white'
                       : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
                   }`}
                 >
                   {opt.icon}
-                  {opt.label}
+                  <span className="hidden md:inline">{opt.label}</span>
                 </button>
               ))}
             </div>
@@ -285,7 +287,8 @@ export function SettingsScreen() {
               loading={ratesLoading}
               onClick={() => void handleRefreshRates()}
             >
-              {t('settings.refreshRates')}
+              <span className="md:hidden">{t('settings.refreshRatesShort')}</span>
+              <span className="hidden md:inline">{t('settings.refreshRates')}</span>
             </Button>
             {settings?.exchangeRatesUpdatedAt && (
               <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -300,79 +303,91 @@ export function SettingsScreen() {
 
       {/* LLM Integration section */}
       <div className="mb-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
-        <h2 className="mb-4 text-base font-semibold text-gray-900 dark:text-gray-100">
-          {t('settings.llm')}
-        </h2>
-
-        <div className="flex flex-col gap-4">
-          <Input
-            label={t('settings.llmBaseUrl')}
-            placeholder="https://api.openai.com/v1"
-            value={llmBaseUrl}
-            onChange={(e) => setLlmBaseUrl(e.target.value)}
+        <button
+          onClick={() => setLlmExpanded(!llmExpanded)}
+          className="mb-4 flex w-full items-center justify-between text-left transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
+        >
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+            {t('settings.llm')}
+          </h2>
+          <ChevronDown
+            className={`size-5 text-gray-600 transition-transform dark:text-gray-400 ${
+              llmExpanded ? 'rotate-180' : ''
+            }`}
           />
+        </button>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {t('settings.llmApiKey')}
-            </label>
-            <div className="relative">
-              <input
-                type={llmKeyVisible ? 'text' : 'password'}
-                value={llmApiKey}
-                onChange={(e) => setLlmApiKey(e.target.value)}
-                placeholder="sk-..."
-                className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:border-transparent focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
-              />
-              <button
-                type="button"
-                onClick={() => setLlmKeyVisible((v) => !v)}
-                className="absolute top-1/2 right-2.5 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        {llmExpanded && (
+          <div className="flex flex-col gap-4">
+            <Input
+              label={t('settings.llmBaseUrl')}
+              placeholder="https://api.openai.com/v1"
+              value={llmBaseUrl}
+              onChange={(e) => setLlmBaseUrl(e.target.value)}
+            />
+
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('settings.llmApiKey')}
+              </label>
+              <div className="relative">
+                <input
+                  type={llmKeyVisible ? 'text' : 'password'}
+                  value={llmApiKey}
+                  onChange={(e) => setLlmApiKey(e.target.value)}
+                  placeholder="sk-..."
+                  className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:border-transparent focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 dark:placeholder-gray-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setLlmKeyVisible((v) => !v)}
+                  className="absolute top-1/2 right-2.5 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  {llmKeyVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+            </div>
+
+            <Input
+              label={t('settings.llmModel')}
+              placeholder="gpt-4o-mini"
+              value={llmModel}
+              onChange={(e) => setLlmModel(e.target.value)}
+            />
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="primary"
+                size="sm"
+                loading={llmSaving}
+                onClick={() => void handleSaveLlm()}
               >
-                {llmKeyVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
+                {t('common.save')}
+              </Button>
+
+              <Button
+                variant="secondary"
+                size="sm"
+                icon={llmTesting ? <Spinner className="size-4" /> : <Sparkles className="size-4" />}
+                loading={llmTesting}
+                onClick={() => void handleTestLlm()}
+              >
+                {t('settings.llmTest')}
+              </Button>
+
+              {llmTestResult === 'success' && (
+                <span className="text-sm text-green-600 dark:text-green-400">
+                  {t('settings.llmTestSuccess')}
+                </span>
+              )}
+              {llmTestResult === 'error' && (
+                <span className="text-sm text-red-600 dark:text-red-400">
+                  {t('settings.llmTestFail')}
+                </span>
+              )}
             </div>
           </div>
-
-          <Input
-            label={t('settings.llmModel')}
-            placeholder="gpt-4o-mini"
-            value={llmModel}
-            onChange={(e) => setLlmModel(e.target.value)}
-          />
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="primary"
-              size="sm"
-              loading={llmSaving}
-              onClick={() => void handleSaveLlm()}
-            >
-              {t('common.save')}
-            </Button>
-
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={llmTesting ? <Spinner className="size-4" /> : <Sparkles className="size-4" />}
-              loading={llmTesting}
-              onClick={() => void handleTestLlm()}
-            >
-              {t('settings.llmTest')}
-            </Button>
-
-            {llmTestResult === 'success' && (
-              <span className="text-sm text-green-600 dark:text-green-400">
-                {t('settings.llmTestSuccess')}
-              </span>
-            )}
-            {llmTestResult === 'error' && (
-              <span className="text-sm text-red-600 dark:text-red-400">
-                {t('settings.llmTestFail')}
-              </span>
-            )}
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Backup section */}

@@ -163,6 +163,7 @@
     "baseCurrency": "Базовая валюта",
     "exchangeRates": "Курсы валют",
     "refreshRates": "Обновить курсы",
+    "refreshRatesShort": "Обновить",
     "lastUpdated": "Последнее обновление",
     "llm": "ИИ (LLM)",
     "llmBaseUrl": "API Base URL",
