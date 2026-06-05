@@ -6,7 +6,7 @@ import { useUIStore } from '@/store/uiStore'
 import { Button } from '@/shared/components/Button'
 import { Badge } from '@/shared/components/Badge'
 import { Modal } from '@/shared/components/Modal'
-import { formatCurrency, formatDateRange } from '@/shared/utils/format'
+import { formatCurrency, formatDateRange, formatMonthYear } from '@/shared/utils/format'
 import { db } from '@/db/db'
 import {
   useCalendarPayments,
@@ -56,11 +56,9 @@ interface DayModalProps {
 
 function DayModal({ day, year, month, entries, onClose }: DayModalProps) {
   const { t } = useTranslation()
-  const dateStr = new Date(year, month, day).toLocaleDateString('ru-BY', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
+  const { t: tFormat } = useTranslation()
+  const monthName = tFormat(`months.long.${month}`)
+  const dateStr = `${day} ${monthName} ${year}`
 
   return (
     <Modal open onClose={onClose} title={dateStr}>
@@ -154,10 +152,7 @@ export default function CalendarScreen() {
     setSelectedDay(null)
   }
 
-  const monthLabel = new Date(year, month, 1).toLocaleDateString('ru-BY', {
-    month: 'long',
-    year: 'numeric',
-  })
+  const monthLabel = formatMonthYear(new Date(year, month, 1))
 
   const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7
   const daysInMonth = new Date(year, month + 1, 0).getDate()

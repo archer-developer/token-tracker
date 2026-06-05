@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db/db'
 import { useUIStore } from '@/store/uiStore'
+import { formatMonthYearShort } from '@/shared/utils/format'
 import type { Currency } from '@/db/types'
 
 export interface TimelinePoint {
@@ -22,10 +23,7 @@ function cvt(amount: number, from: Currency, to: Currency, rateMap: Map<string, 
 
 function isoToLabel(iso: string): string {
   const [y, m] = iso.split('-')
-  return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString('ru-BY', {
-    month: 'short',
-    year: '2-digit',
-  })
+  return formatMonthYearShort(new Date(Number(y), Number(m) - 1, 1))
 }
 
 function isoToLabelMobile(iso: string): string {
