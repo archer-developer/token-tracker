@@ -161,6 +161,7 @@
     "theme_system": "Сістэмная",
     "language": "Мова",
     "baseCurrency": "Базавая валюта",
+    "hideAmounts": "Хаваць сумы па змоўчванні",
     "exchangeRates": "Курсы валют",
     "refreshRates": "Абнавіць курсы",
     "refreshRatesShort": "Абнавіць",

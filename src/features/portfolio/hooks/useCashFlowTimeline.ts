@@ -30,7 +30,7 @@ function isoToLabel(iso: string): string {
 
 function isoToLabelMobile(iso: string): string {
   const [y, m] = iso.split('-')
-  return `${m}/${y.slice(-2)}`
+  return `${m}/${y?.slice(-2) ?? ''}`
 }
 
 function monthRange(start: string, end: string): string[] {

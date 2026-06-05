@@ -31,7 +31,16 @@ import { formatDate } from '@/shared/utils/format'
 export function SettingsScreen() {
   const { t } = useTranslation()
   const settings = useSettings()
-  const { theme, setTheme, language, setLanguage, baseCurrency, setBaseCurrency } = useUIStore()
+  const {
+    theme,
+    setTheme,
+    language,
+    setLanguage,
+    baseCurrency,
+    setBaseCurrency,
+    hideAmounts,
+    setHideAmounts,
+  } = useUIStore()
 
   // Exchange rates
   const [ratesLoading, setRatesLoading] = useState(false)
@@ -61,6 +70,7 @@ export function SettingsScreen() {
       setLlmBaseUrl(settings.llmBaseUrl ?? '')
       setLlmApiKey(settings.llmApiKey ?? '')
       setLlmModel(settings.llmModel ?? '')
+      setHideAmounts(settings.hideAmounts ?? false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settings?.id])
@@ -244,6 +254,21 @@ export function SettingsScreen() {
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Hide Amounts */}
+          <div>
+            <label className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={hideAmounts}
+                onChange={(e) => setHideAmounts(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('settings.hideAmounts', 'Скрывать суммы по умолчанию')}
+              </span>
+            </label>
           </div>
         </div>
       </div>

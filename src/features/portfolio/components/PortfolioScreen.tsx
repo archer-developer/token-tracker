@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LayoutDashboard } from 'lucide-react'
 import {
@@ -16,7 +16,8 @@ import {
 import { useUIStore } from '@/store/uiStore'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { Spinner } from '@/shared/components/Spinner'
-import { formatCurrency, formatPercent } from '@/shared/utils/format'
+import { formatPercent } from '@/shared/utils/format'
+import { CurrencyDisplay } from '@/features/settings/components/CurrencyDisplay'
 import { usePortfolioMetrics } from '@/features/portfolio/hooks/usePortfolioMetrics'
 import { useCashFlowTimeline } from '@/features/portfolio/hooks/useCashFlowTimeline'
 import type { Currency } from '@/db/types'
@@ -28,18 +29,30 @@ function MetricCard({
   value,
   valueClass = 'text-gray-900 dark:text-gray-100',
   sub,
+  amount,
+  currency,
 }: {
   label: string
-  value: string
+  value?: string
   valueClass?: string
   sub?: string
+  amount?: number
+  currency?: Currency
 }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
       <p className="text-xs font-medium tracking-wide text-gray-500 uppercase dark:text-gray-400">
         {label}
       </p>
-      <p className={`mt-1.5 text-xl font-semibold tabular-nums ${valueClass}`}>{value}</p>
+      {amount != null && currency != null ? (
+        <CurrencyDisplay
+          amount={amount}
+          currency={currency}
+          className={`mt-1.5 text-xl font-semibold tabular-nums ${valueClass}`}
+        />
+      ) : (
+        <p className={`mt-1.5 text-xl font-semibold tabular-nums ${valueClass}`}>{value}</p>
+      )}
       {sub && <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">{sub}</p>}
     </div>
   )
@@ -79,48 +92,52 @@ function PnLTooltip({
   return (
     <div className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-lg dark:border-gray-700 dark:bg-gray-900">
       <p className="font-medium text-gray-700 dark:text-gray-300">{String(label ?? '')}</p>
-      <p
+      <div
         className={`mt-0.5 font-semibold tabular-nums ${value >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}
       >
-        {value >= 0 ? '+' : ''}
-        {formatCurrency(value, baseCurrency)}
-      </p>
+        <span>{value >= 0 ? '+' : ''}</span>
+        <CurrencyDisplay amount={value} currency={baseCurrency} showFormatted={true} />
+      </div>
       {isProjected && <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">прогноз</p>}
     </div>
   )
 }
 
-interface CustomXAxisTickProps {
-  x: number
-  y: number
-  payload: { value: string; index: number }
-  isMobile: boolean
-  data: ReturnType<typeof useCashFlowTimeline>
-}
+function createCustomXAxisTick(
+  isMobileMode: boolean,
+  timelineData: ReturnType<typeof useCashFlowTimeline>,
+) {
+  return function CustomXAxisTick(props: {
+    x?: number
+    y?: number
+    payload?: { value: string; index: number }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [key: string]: any
+  }): React.ReactNode {
+    if (!isMobileMode || props.x == null || props.y == null || !props.payload) return null
 
-function CustomXAxisTick({
-  x,
-  y,
-  payload,
-  isMobile,
-  data,
-}: CustomXAxisTickProps): JSX.Element | null {
-  if (!isMobile) return null
+    const dataPoint = timelineData[props.payload.index]
+    if (!dataPoint) return null
 
-  const dataPoint = data[payload.index]
-  if (!dataPoint) return null
+    const [, month] = dataPoint.monthISO.split('-')
+    const monthNum = Number(month)
 
-  const [, month] = dataPoint.monthISO.split('-')
-  const monthNum = Number(month)
+    // Mobile: show January only
+    if (monthNum !== 1) return null
 
-  // Mobile: show January only
-  if (monthNum !== 1) return null
-
-  return (
-    <text x={x} y={y} textAnchor="middle" dominantBaseline="hanging" fontSize={11} fill="#9ca3af">
-      {dataPoint.labelMobile}
-    </text>
-  )
+    return (
+      <text
+        x={props.x}
+        y={props.y}
+        textAnchor="middle"
+        dominantBaseline="hanging"
+        fontSize={11}
+        fill="#9ca3af"
+      >
+        {dataPoint.labelMobile}
+      </text>
+    )
+  }
 }
 
 function PnLChart({
@@ -144,6 +161,7 @@ function PnLChart({
 
   // X-axis: show ~10 labels max
   const tickInterval = Math.max(1, Math.floor(data.length / 10))
+  const CustomXAxisTick = createCustomXAxisTick(isMobile, data)
 
   if (data.length === 0) {
     return (
@@ -165,13 +183,8 @@ function PnLChart({
 
         <XAxis
           dataKey="label"
-          tick={
-            isMobile
-              ? (props: CustomXAxisTickProps) => (
-                  <CustomXAxisTick {...props} isMobile={isMobile} data={data} />
-                )
-              : { fontSize: 11, fill: '#9ca3af' }
-          }
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          tick={isMobile ? (CustomXAxisTick as any) : { fontSize: 11, fill: '#9ca3af' }}
           tickLine={false}
           axisLine={false}
           interval={isMobile ? 0 : tickInterval}
@@ -285,8 +298,6 @@ export default function PortfolioScreen() {
     )
   }
 
-  const fmt = (amount: number) => formatCurrency(amount, baseCurrency)
-
   // Projected final P&L: last value in timeline
   const lastPoint = timeline.length > 0 ? timeline[timeline.length - 1] : null
   const projectedFinal = lastPoint?.projected ?? lastPoint?.historical ?? null
@@ -297,9 +308,6 @@ export default function PortfolioScreen() {
       : projectedFinal >= 0
         ? 'text-green-600 dark:text-green-400'
         : 'text-red-600 dark:text-red-400'
-
-  const projectedDisplay =
-    projectedFinal != null ? `${projectedFinal >= 0 ? '+' : ''}${fmt(projectedFinal)}` : '—'
 
   const xirrClass =
     metrics.xirrValue == null
@@ -318,10 +326,15 @@ export default function PortfolioScreen() {
 
       {/* Key metrics */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <MetricCard label={t('portfolio.activePrincipal')} value={fmt(metrics.activePrincipal)} />
+        <MetricCard
+          label={t('portfolio.activePrincipal')}
+          amount={metrics.activePrincipal}
+          currency={baseCurrency}
+        />
         <MetricCard
           label={t('portfolio.defaultedPrincipal')}
-          value={fmt(metrics.defaultedPrincipal)}
+          amount={metrics.defaultedPrincipal}
+          currency={baseCurrency}
           valueClass={
             metrics.defaultedPrincipal > 0
               ? 'text-red-600 dark:text-red-400'
@@ -336,7 +349,8 @@ export default function PortfolioScreen() {
         />
         <MetricCard
           label={t('portfolio.projectedFinal')}
-          value={projectedDisplay}
+          amount={projectedFinal ?? undefined}
+          currency={baseCurrency}
           valueClass={projectedClass}
           sub={lastPoint?.label}
         />
@@ -397,7 +411,8 @@ export default function PortfolioScreen() {
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
             <MetricCard
               label={t('portfolio.recoveredPrincipal')}
-              value={fmt(metrics.recoveredPrincipal)}
+              amount={metrics.recoveredPrincipal}
+              currency={baseCurrency}
             />
             <MetricCard
               label={t('portfolio.recoveryRatio')}
@@ -405,7 +420,8 @@ export default function PortfolioScreen() {
             />
             <MetricCard
               label={t('portfolio.largestLoss')}
-              value={metrics.largestLoss != null ? fmt(metrics.largestLoss) : '—'}
+              amount={metrics.largestLoss ?? undefined}
+              currency={baseCurrency}
               valueClass={
                 metrics.largestLoss != null && metrics.largestLoss < 0
                   ? 'text-red-600 dark:text-red-400'

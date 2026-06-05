@@ -41,6 +41,7 @@ export async function getSettings(): Promise<Settings> {
     theme: 'dark',
     language: 'ru',
     baseCurrency: 'BYN',
+    hideAmounts: false,
   }
   await db.settings.add(defaultSettings)
   return defaultSettings

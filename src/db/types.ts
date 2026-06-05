@@ -78,6 +78,7 @@ export interface Settings {
   theme: Theme
   language: Language
   baseCurrency: Currency
+  hideAmounts: boolean
   llmBaseUrl?: string
   llmApiKey?: string
   llmModel?: string
