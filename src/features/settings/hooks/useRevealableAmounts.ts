@@ -3,43 +3,46 @@ import { create } from 'zustand'
 const REVEAL_DURATION = 10000
 
 interface AmountsRevealStore {
-  revealedIds: Set<string>
-  timers: Map<string, ReturnType<typeof setTimeout>>
-  reveal: (id: string) => void
-  isRevealed: (id: string) => boolean
+  isRevealedAll: boolean
+  revealAllTimer: ReturnType<typeof setTimeout> | null
+  revealAll: () => void
+  isRevealed: () => boolean
+  reset: () => void
 }
 
 export const useAmountsRevealStore = create<AmountsRevealStore>((set, get) => ({
-  revealedIds: new Set(),
-  timers: new Map(),
+  isRevealedAll: false,
+  revealAllTimer: null,
 
-  reveal: (id: string) => {
+  revealAll: () => {
     const state = get()
-    const existingTimer = state.timers.get(id)
-    if (existingTimer) {
-      clearTimeout(existingTimer)
+    // Clear existing timer if any
+    if (state.revealAllTimer) {
+      clearTimeout(state.revealAllTimer)
     }
 
-    set((s) => ({
-      revealedIds: new Set([...s.revealedIds, id]),
-    }))
+    set({ isRevealedAll: true })
 
+    // Set new timer to hide after REVEAL_DURATION
     const timer = setTimeout(() => {
-      set((s) => {
-        const newSet = new Set(s.revealedIds)
-        newSet.delete(id)
-        return { revealedIds: newSet }
-      })
-      state.timers.delete(id)
+      set({ isRevealedAll: false, revealAllTimer: null })
     }, REVEAL_DURATION)
 
-    state.timers.set(id, timer)
+    set({ revealAllTimer: timer })
   },
 
-  isRevealed: (id: string) => get().revealedIds.has(id),
+  isRevealed: () => get().isRevealedAll,
+
+  reset: () => {
+    const state = get()
+    if (state.revealAllTimer) {
+      clearTimeout(state.revealAllTimer)
+    }
+    set({ isRevealedAll: false, revealAllTimer: null })
+  },
 }))
 
 export function useRevealableAmounts() {
-  const { isRevealed, reveal } = useAmountsRevealStore()
-  return { isRevealed, reveal }
+  const { isRevealed, revealAll } = useAmountsRevealStore()
+  return { isRevealed, reveal: revealAll }
 }

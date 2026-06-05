@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { useUIStore } from '@/store/uiStore'
 import { useRevealableAmounts } from '@/features/settings/hooks/useRevealableAmounts'
 import { formatCurrency } from '@/shared/utils/format'
@@ -11,8 +10,6 @@ interface CurrencyDisplayProps {
   showFormatted?: boolean
 }
 
-let idCounter = 0
-
 export function CurrencyDisplay({
   amount,
   currency,
@@ -22,17 +19,15 @@ export function CurrencyDisplay({
   const { hideAmounts } = useUIStore()
   const { isRevealed, reveal } = useRevealableAmounts()
 
-  // Generate a stable ID for this component instance
-  const displayId = useMemo(() => `amount-${idCounter++}`, [])
-  const shouldHide = hideAmounts && !isRevealed(displayId)
+  const shouldHide = hideAmounts && !isRevealed()
 
   if (showFormatted && currency) {
     const formatted = formatCurrency(amount, currency)
     return (
       <button
-        onClick={() => reveal(displayId)}
+        onClick={() => reveal()}
         className={`cursor-pointer transition-opacity hover:opacity-70 ${className}`}
-        title="Нажмите, чтобы показать сумму на 10 сек"
+        title="Нажмите, чтобы показать все суммы на 10 сек"
       >
         {shouldHide ? '****' : formatted}
       </button>
@@ -41,9 +36,9 @@ export function CurrencyDisplay({
 
   return (
     <button
-      onClick={() => reveal(displayId)}
+      onClick={() => reveal()}
       className={`cursor-pointer transition-opacity hover:opacity-70 ${className}`}
-      title="Нажмите, чтобы показать сумму на 10 сек"
+      title="Нажмите, чтобы показать все суммы на 10 сек"
     >
       {shouldHide ? '****' : amount.toString()}
     </button>
