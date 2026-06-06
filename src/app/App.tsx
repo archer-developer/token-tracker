@@ -61,7 +61,12 @@ export default function App() {
     <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
       <div className="flex">
         <Sidebar />
-        <main className="min-w-0 flex-1 pb-20 lg:pb-0">{element}</main>
+        <main
+          className="min-w-0 flex-1 pb-20 lg:pb-0"
+          style={{ paddingTop: 'env(safe-area-inset-top)' }}
+        >
+          {element}
+        </main>
       </div>
       <BottomTabBar />
       <InstallBanner />
