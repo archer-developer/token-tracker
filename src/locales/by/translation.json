@@ -87,7 +87,9 @@
   "payment": {
     "title": "Выплаты",
     "markPaid": "Адзначыць як выплачаную",
+    "markPaidShort": "Выплачана",
     "markMissed": "Адзначыць як прапушчаную",
+    "markMissedShort": "Прапушчана",
     "markMissedConfirm": "Вы ўпэўнены, што хочаце адзначыць гэту выплату як прапушчаную?",
     "expected": "Чаканая сума",
     "actual": "Фактычная сума",
@@ -112,6 +114,7 @@
     "type_redemption": "Пагашэнне",
     "type_recovery": "Вяртанне пасля дэфолту",
     "type_sale": "Продаж",
+    "filterAll": "Усе",
     "empty": "Няма запісаў."
   },
   "portfolio": {

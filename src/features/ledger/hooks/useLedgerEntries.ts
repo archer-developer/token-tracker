@@ -1,11 +1,12 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db/db'
-import type { LedgerEntryType } from '@/db/types'
+import type { LedgerEntryType, Currency } from '@/db/types'
 
 export interface LedgerEntryWithInstrument {
   id?: number
   instrumentId: number
   instrumentName: string
+  instrumentCurrency: Currency
   date: string
   type: LedgerEntryType
   amount: number
@@ -24,12 +25,26 @@ export function useLedgerEntries(
         db.instruments.toArray(),
       ])
 
-      const instrumentMap = new Map(instruments.map((i) => [i.id!, i.name]))
+      const instrumentMap = new Map(
+        instruments.map((i) => [i.id!, { name: i.name, currency: i.currency }]),
+      )
 
-      let result: LedgerEntryWithInstrument[] = entries.map((entry) => ({
-        ...entry,
-        instrumentName: instrumentMap.get(entry.instrumentId) ?? '',
-      }))
+      let result: LedgerEntryWithInstrument[] = entries.map((entry) => {
+        const instrument = instrumentMap.get(entry.instrumentId)
+        const mappedEntry = {
+          ...entry,
+          instrumentName: instrument?.name ?? '',
+          instrumentCurrency: instrument?.currency ?? 'BYN',
+        }
+        if (
+          process.env.NODE_ENV === 'development' &&
+          entries.length > 0 &&
+          entries[0].id === entry.id
+        ) {
+          console.log('[Ledger] Sample entry currency:', mappedEntry.instrumentCurrency)
+        }
+        return mappedEntry
+      })
 
       if (filter) {
         result = result.filter((e) => e.type === filter)

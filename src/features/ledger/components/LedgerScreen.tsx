@@ -9,8 +9,9 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  Download,
 } from 'lucide-react'
-import type { Currency, LedgerEntryType } from '@/db/types'
+import type { LedgerEntryType } from '@/db/types'
 import { useLedgerEntries } from '@/features/ledger/hooks/useLedgerEntries'
 import { Button } from '@/shared/components/Button'
 import { Input } from '@/shared/components/Input'
@@ -18,7 +19,6 @@ import { Select } from '@/shared/components/Select'
 import { Badge } from '@/shared/components/Badge'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { formatCurrency, formatDate } from '@/shared/utils/format'
-import { useUIStore } from '@/store/uiStore'
 
 const typeIcons: Record<LedgerEntryType, ReactNode> = {
   purchase: <ShoppingCart className="size-3.5" />,
@@ -38,13 +38,13 @@ const typeBadgeVariant: Record<LedgerEntryType, 'blue' | 'green' | 'gray' | 'yel
 
 const PAGE_SIZE = 10
 
-function exportToCsv(entries: ReturnType<typeof useLedgerEntries>, baseCurrency: Currency): void {
+function exportToCsv(entries: ReturnType<typeof useLedgerEntries>): void {
   const header = ['Date', 'Type', 'Instrument', 'Amount']
   const rows = entries.map((e) => [
     e.date,
     e.type,
     `"${e.instrumentName.replace(/"/g, '""')}"`,
-    formatCurrency(e.amount, baseCurrency),
+    formatCurrency(e.amount, e.instrumentCurrency),
   ])
   const csv = [header, ...rows].map((r) => r.join(',')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
@@ -58,18 +58,25 @@ function exportToCsv(entries: ReturnType<typeof useLedgerEntries>, baseCurrency:
 
 export function LedgerScreen() {
   const { t } = useTranslation()
-  const { baseCurrency } = useUIStore()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<LedgerEntryType | ''>('')
   const [page, setPage] = useState(0)
 
   const entries = useLedgerEntries(filter || undefined, search)
 
+  if (process.env.NODE_ENV === 'development' && entries.length > 0) {
+    console.log('[LedgerScreen] First entry:', {
+      instrumentName: entries[0].instrumentName,
+      instrumentCurrency: entries[0].instrumentCurrency,
+      amount: entries[0].amount,
+    })
+  }
+
   const totalPages = Math.ceil(entries.length / PAGE_SIZE)
   const displayed = entries.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   const selectOptions = [
-    { value: '', label: t('common.filter') + ': Все' },
+    { value: '', label: t('common.filter') + ': ' + t('ledger.filterAll') },
     { value: 'purchase', label: t('ledger.type_purchase') },
     { value: 'coupon', label: t('ledger.type_coupon') },
     { value: 'redemption', label: t('ledger.type_redemption') },
@@ -81,8 +88,13 @@ export function LedgerScreen() {
     <div className="mx-auto max-w-4xl px-4 py-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('ledger.title')}</h1>
-        <Button variant="secondary" size="sm" onClick={() => exportToCsv(entries, baseCurrency)}>
-          {t('common.export')} CSV
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={<Download className="size-4" />}
+          onClick={() => exportToCsv(entries)}
+        >
+          <span className="hidden sm:inline">{t('common.export')} CSV</span>
         </Button>
       </div>
 
@@ -137,7 +149,7 @@ export function LedgerScreen() {
                       }`}
                     >
                       {entry.amount >= 0 ? '+' : ''}
-                      {formatCurrency(entry.amount, baseCurrency)}
+                      {formatCurrency(entry.amount, entry.instrumentCurrency)}
                     </span>
                   </div>
                 </div>
@@ -194,7 +206,7 @@ export function LedgerScreen() {
                       }`}
                     >
                       {entry.amount >= 0 ? '+' : ''}
-                      {formatCurrency(entry.amount, baseCurrency)}
+                      {formatCurrency(entry.amount, entry.instrumentCurrency)}
                     </td>
                   </tr>
                 ))}
