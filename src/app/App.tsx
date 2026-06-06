@@ -44,6 +44,15 @@ export default function App() {
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
     const handler = () => applyTheme(theme)
     mq.addEventListener('change', handler)
+
+    // Update theme-color meta tag for iOS (pull-to-refresh background)
+    const prefersDark = mq.matches
+    const isDark = theme === 'dark' || (theme === 'system' && prefersDark)
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]')
+    if (themeColorMeta) {
+      themeColorMeta.setAttribute('content', isDark ? '#111827' : '#ffffff')
+    }
+
     return () => mq.removeEventListener('change', handler)
   }, [theme])
 
