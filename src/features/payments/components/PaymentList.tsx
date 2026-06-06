@@ -40,7 +40,7 @@ interface MarkPaidState {
 
 export function PaymentList({ instrumentId }: Props) {
   const { t } = useTranslation()
-  const { baseCurrency } = useUIStore()
+  const { baseCurrency, showZeroPayments } = useUIStore()
   const payments = usePayments(instrumentId)
 
   const [tab, setTab] = useState<Tab>('upcoming')
@@ -58,8 +58,16 @@ export function PaymentList({ instrumentId }: Props) {
   // history: paid + missed, descending (most recent first)
   const filtered =
     tab === 'upcoming'
-      ? payments.filter((p) => p.status === 'scheduled')
-      : [...payments.filter((p) => p.status === 'paid' || p.status === 'missed')].reverse()
+      ? payments.filter(
+          (p) => p.status === 'scheduled' && (showZeroPayments || p.expectedAmount > 0),
+        )
+      : [
+          ...payments.filter(
+            (p) =>
+              (p.status === 'paid' || p.status === 'missed') &&
+              (showZeroPayments || p.expectedAmount > 0 || p.actualAmount?.toString() !== ''),
+          ),
+        ].reverse()
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const displayed = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE)
