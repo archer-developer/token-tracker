@@ -6,10 +6,13 @@ import basicSsl from '@vitejs/plugin-basic-ssl'
 import path from 'path'
 
 export default defineConfig({
+  // /token-tracker/ when building in GitHub Actions, / elsewhere
+  base: process.env.GITHUB_ACTIONS ? '/token-tracker/' : '/',
   plugins: [
     tailwindcss(),
     react(),
-    basicSsl(),
+    // HTTPS only needed for local dev server
+    ...(process.env.GITHUB_ACTIONS ? [] : [basicSsl()]),
     VitePWA({
       registerType: 'prompt',
       manifest: {
