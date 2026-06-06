@@ -80,6 +80,7 @@ export interface Settings {
   baseCurrency: Currency
   hideAmounts: boolean
   showZeroPayments: boolean
+  presentationMode: boolean
   llmBaseUrl?: string
   llmApiKey?: string
   llmModel?: string

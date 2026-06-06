@@ -29,6 +29,8 @@ export default function App() {
 
   useEffect(() => {
     void (async () => {
+      // Get settings from appropriate database
+      // (if presentation mode is on, demoDb already has data loaded from SettingsScreen)
       const settings = await getSettings()
       setTheme(settings.theme)
       setLanguage(settings.language)

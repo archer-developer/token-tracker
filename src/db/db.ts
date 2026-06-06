@@ -1,41 +1,29 @@
-import Dexie, { type Table } from 'dexie'
-import type {
-  Instrument,
-  PurchaseLot,
-  PaymentRecord,
-  LedgerEntry,
-  ExchangeRate,
-  Settings,
-} from './types'
+import { getRealDb, getDemoDb } from './dbManager'
+import { getPresentationMode } from './presentationModeStorage'
+import type { Settings } from './types'
 
-class TokensTrackerDB extends Dexie {
-  instruments!: Table<Instrument>
-  purchaseLots!: Table<PurchaseLot>
-  paymentRecords!: Table<PaymentRecord>
-  ledgerEntries!: Table<LedgerEntry>
-  exchangeRates!: Table<ExchangeRate>
-  settings!: Table<Settings>
+const realDb = getRealDb()
+const demoDb = getDemoDb()
 
-  constructor() {
-    super('TokensTrackerDB')
-    this.version(1).stores({
-      instruments: '++id, status, platform, currency',
-      purchaseLots: '++id, instrumentId, purchaseDate',
-      paymentRecords: '++id, instrumentId, periodIndex, status, type, paymentDateFrom',
-      ledgerEntries: '++id, instrumentId, date, type',
-      exchangeRates: 'currency',
-      settings: '++id',
-    })
-    this.version(2).stores({
-      instruments: '++id, name, status, platform, currency',
-    })
-  }
-}
+/**
+ * Proxy object that routes all database operations to the correct database
+ * based on presentation mode stored in localStorage
+ */
+export const db = new Proxy(realDb, {
+  get: (_, prop) => {
+    const isPresentationMode = getPresentationMode()
+    const activeDb = isPresentationMode ? demoDb : realDb
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (activeDb as any)[prop]
+  },
+}) as typeof realDb
 
-export const db = new TokensTrackerDB()
-
+/**
+ * Get settings from the REAL database only
+ * (Settings are always stored in real DB to determine the mode)
+ */
 export async function getSettings(): Promise<Settings> {
-  const existing = await db.settings.toCollection().first()
+  const existing = await realDb.settings.toCollection().first()
   if (existing) return existing
   const defaultSettings: Settings = {
     theme: 'dark',
@@ -43,14 +31,18 @@ export async function getSettings(): Promise<Settings> {
     baseCurrency: 'BYN',
     hideAmounts: false,
     showZeroPayments: false,
+    presentationMode: false,
   }
-  await db.settings.add(defaultSettings)
+  await realDb.settings.add(defaultSettings)
   return defaultSettings
 }
 
+/**
+ * Update settings in the REAL database only
+ */
 export async function updateSettings(patch: Partial<Settings>): Promise<void> {
-  const existing = await db.settings.toCollection().first()
+  const existing = await realDb.settings.toCollection().first()
   if (existing?.id != null) {
-    await db.settings.update(existing.id, patch)
+    await realDb.settings.update(existing.id, patch)
   }
 }

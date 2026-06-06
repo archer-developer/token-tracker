@@ -183,6 +183,7 @@
     "baseCurrency": "Базавая валюта",
     "hideAmounts": "Хаваць сумы па змаўчаннi",
     "showZeroPayments": "Паказваць нулявыя выплаты",
+    "presentationMode": "Рэжым прэзентацыі",
     "exchangeRates": "Курсы валют",
     "refreshRates": "Абнавіць курсы",
     "refreshRatesShort": "Абнавіць",

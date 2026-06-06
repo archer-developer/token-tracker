@@ -15,9 +15,21 @@ import {
   EyeOff,
   ChevronDown,
 } from 'lucide-react'
-import type { Currency, Language, Theme } from '@/db/types'
+import type {
+  Currency,
+  Language,
+  Theme,
+  Instrument,
+  PurchaseLot,
+  PaymentRecord,
+  LedgerEntry,
+  ExchangeRate,
+  Settings,
+} from '@/db/types'
 import { useSettings } from '@/features/settings/hooks/useSettings'
 import { updateSettings } from '@/db/db'
+import { loadDemoData } from '@/db/dbManager'
+import { setPresentationMode as setPresentationModeStorage } from '@/db/presentationModeStorage'
 import { fetchAndCacheRates } from '@/services/exchangeRates/NBRBClient'
 import { testConnection } from '@/services/llm/LLMService'
 import { exportBackup, importBackup, downloadJson } from '@/db/backup'
@@ -28,6 +40,7 @@ import { Spinner } from '@/shared/components/Spinner'
 import { Toggle } from '@/shared/components/Toggle'
 import { useUIStore } from '@/store/uiStore'
 import { formatDate } from '@/shared/utils/format'
+import demoDataJson from '@/db/demo-data.json'
 
 export function SettingsScreen() {
   const { t } = useTranslation()
@@ -43,6 +56,8 @@ export function SettingsScreen() {
     setHideAmounts,
     showZeroPayments,
     setShowZeroPayments,
+    presentationMode,
+    setPresentationMode,
   } = useUIStore()
 
   // Exchange rates
@@ -60,6 +75,9 @@ export function SettingsScreen() {
   const [llmTestResult, setLlmTestResult] = useState<'success' | 'error' | null>(null)
   const [llmExpanded, setLlmExpanded] = useState(false)
 
+  // Presentation mode loading
+  const [presentationModeLoading, setPresentationModeLoading] = useState(false)
+
   // Backup
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [importConfirm, setImportConfirm] = useState(false)
@@ -67,6 +85,7 @@ export function SettingsScreen() {
   const [importError, setImportError] = useState<string | null>(null)
 
   // Initialize LLM fields from settings once when settings first load
+  // Note: presentationMode is NOT synced from settings because it's managed via localStorage only
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (settings) {
@@ -276,6 +295,55 @@ export function SettingsScreen() {
               onChange={setShowZeroPayments}
               label={t('settings.showZeroPayments')}
             />
+          </div>
+
+          {/* Presentation Mode */}
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-900/20">
+            <div className="flex items-center gap-3">
+              <Toggle
+                checked={presentationMode}
+                onChange={async (enabled) => {
+                  if (presentationModeLoading) return
+                  setPresentationModeLoading(true)
+                  try {
+                    if (enabled) {
+                      // Load demo data into demoDb
+                      const demoData = demoDataJson as unknown as {
+                        data: {
+                          instruments?: Instrument[]
+                          purchaseLots?: PurchaseLot[]
+                          paymentRecords?: PaymentRecord[]
+                          ledgerEntries?: LedgerEntry[]
+                          exchangeRates?: ExchangeRate[]
+                          settings?: Settings[]
+                        }
+                      }
+                      await loadDemoData({
+                        instruments: demoData.data.instruments || [],
+                        purchaseLots: demoData.data.purchaseLots || [],
+                        paymentRecords: demoData.data.paymentRecords || [],
+                        ledgerEntries: demoData.data.ledgerEntries || [],
+                        exchangeRates: demoData.data.exchangeRates || [],
+                        settings: demoData.data.settings,
+                      })
+                    }
+                    // Save flag to localStorage
+                    setPresentationModeStorage(enabled)
+                    setPresentationMode(enabled)
+                    // Reload page
+                    await new Promise((resolve) => setTimeout(resolve, 500))
+                    window.location.reload()
+                  } finally {
+                    setPresentationModeLoading(false)
+                  }
+                }}
+                label={t('settings.presentationMode')}
+              />
+              {presentationModeLoading && <Spinner className="size-4" />}
+            </div>
+            <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
+              Заполняет БД демо-данными для презентаций и тестирования
+            </p>
           </div>
         </div>
       </div>

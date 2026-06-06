@@ -27,3 +27,4 @@ dev-dist
 # Playwright
 test-results/
 playwright-report/
+tokens-tracker-backup-*.json
