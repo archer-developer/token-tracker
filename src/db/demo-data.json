@@ -5743,7 +5743,7 @@
         "id": 1,
         "exchangeRatesUpdatedAt": "2026-05-31T14:25:06.111Z",
         "llmBaseUrl": "https://generativelanguage.googleapis.com/v1beta/openai",
-        "llmApiKey": "AIzaSyCPcfAeIPB0Ivwkszdm1oYsAnmsrPkgos0",
+        "llmApiKey": "",
         "llmModel": "gemini-flash-latest",
         "hideAmounts": false,
         "showZeroPayments": false,
