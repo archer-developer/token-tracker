@@ -15,10 +15,18 @@ npm run test:e2e     # Playwright e2e (needs dev server running or starts it via
 npm run build        # tsc -b && vite build
 npm run lint         # eslint src/
 npm run format       # prettier --write src/
+npm run version:patch  # bump patch version in package.json (1.0.x → 1.0.x+1)
+npm run version:minor  # bump minor version in package.json (1.x.0 → 1.x+1.0)
 ```
 
 Pre-commit hook: `lint-staged` (eslint + prettier on staged files) → `npm run test:run`.  
 **Commits are blocked if tests fail.**
+
+### Version bumping
+
+**Run `npm run version:patch` before every commit** (staged together with the code changes).  
+Use `npm run version:minor` instead when the commit introduces a new user-facing feature.  
+The version is injected into the bundle by Vite at build time — no other files need updating.
 
 ---
 
