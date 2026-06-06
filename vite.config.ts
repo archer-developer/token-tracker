@@ -11,7 +11,7 @@ export default defineConfig({
     react(),
     basicSsl(),
     VitePWA({
-      registerType: 'prompt',
+      registerType: 'auto',
       manifest: {
         name: 'Tokens Tracker',
         short_name: 'Tokens',
