@@ -86,7 +86,8 @@ function DayModal({ day, year, month, entries, onClose }: DayModalProps) {
                     void markPayment(payment.id!, 'paid')
                   }}
                 >
-                  {t('payment.markPaid')}
+                  <span className="hidden sm:inline">{t('payment.markPaid')}</span>
+                  <span className="sm:hidden">{t('payment.markPaidShort')}</span>
                 </Button>
                 <Button
                   size="sm"
@@ -95,7 +96,8 @@ function DayModal({ day, year, month, entries, onClose }: DayModalProps) {
                     void markPayment(payment.id!, 'missed')
                   }}
                 >
-                  {t('payment.markMissed')}
+                  <span className="hidden sm:inline">{t('payment.markMissed')}</span>
+                  <span className="sm:hidden">{t('payment.markMissedShort')}</span>
                 </Button>
               </div>
             )}
