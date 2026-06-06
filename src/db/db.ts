@@ -32,6 +32,7 @@ export async function getSettings(): Promise<Settings> {
     hideAmounts: false,
     showZeroPayments: false,
     presentationMode: false,
+    firstUsedAt: new Date().toISOString(),
   }
   await realDb.settings.add(defaultSettings)
   return defaultSettings

@@ -33,11 +33,21 @@ export function useBackupReminder() {
     return { shouldRemind: false, snooze, lastBackupAt: settings.lastBackupAt }
   }
 
+  const firstUsedAt = settings.firstUsedAt
+  const appAgeDays = firstUsedAt ? (now - new Date(firstUsedAt).getTime()) / 86_400_000 : Infinity
+
+  // Don't remind users who just installed — give them 30 days first
+  if (appAgeDays < THRESHOLD_DAYS) {
+    return { shouldRemind: false, snooze, lastBackupAt: settings.lastBackupAt }
+  }
+
   const lastBackupAt = settings.lastBackupAt
-  const daysSince = lastBackupAt ? (now - new Date(lastBackupAt).getTime()) / 86_400_000 : Infinity
+  const daysSinceBackup = lastBackupAt
+    ? (now - new Date(lastBackupAt).getTime()) / 86_400_000
+    : Infinity
 
   return {
-    shouldRemind: daysSince > THRESHOLD_DAYS,
+    shouldRemind: daysSinceBackup > THRESHOLD_DAYS,
     lastBackupAt,
     snooze,
   }

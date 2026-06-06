@@ -85,5 +85,6 @@ export interface Settings {
   llmApiKey?: string
   llmModel?: string
   exchangeRatesUpdatedAt?: string
+  firstUsedAt?: string
   lastBackupAt?: string
 }
