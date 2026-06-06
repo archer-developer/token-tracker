@@ -184,6 +184,8 @@
     "baseCurrency": "Базовая валюта",
     "hideAmounts": "Скрывать суммы по умолчанию",
     "showZeroPayments": "Показывать нулевые выплаты",
+    "enableAutoUpdates": "Автоматические обновления приложения",
+    "enableAutoUpdatesDesc": "Приложение будет проверять и скачивать обновления в фоне",
     "presentationMode": "Режим презентации",
     "exchangeRates": "Курсы валют",
     "refreshRates": "Обновить курсы",

@@ -58,6 +58,8 @@ export function SettingsScreen() {
     setShowZeroPayments,
     presentationMode,
     setPresentationMode,
+    enableAutoUpdates,
+    setEnableAutoUpdates,
   } = useUIStore()
 
   // Exchange rates
@@ -294,6 +296,18 @@ export function SettingsScreen() {
               onChange={setShowZeroPayments}
               label={t('settings.showZeroPayments')}
             />
+          </div>
+
+          {/* Enable Auto Updates */}
+          <div>
+            <Toggle
+              checked={enableAutoUpdates}
+              onChange={setEnableAutoUpdates}
+              label={t('settings.enableAutoUpdates')}
+            />
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              {t('settings.enableAutoUpdatesDesc')}
+            </p>
           </div>
 
           {/* Presentation Mode */}

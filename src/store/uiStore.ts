@@ -13,6 +13,7 @@ interface UIState {
   hideAmounts: boolean
   showZeroPayments: boolean
   presentationMode: boolean
+  enableAutoUpdates: boolean
   sidebarOpen: boolean
   setTheme: (theme: Theme) => void
   setLanguage: (language: Language) => void
@@ -20,7 +21,25 @@ interface UIState {
   setHideAmounts: (hide: boolean) => void
   setShowZeroPayments: (show: boolean) => void
   setPresentationMode: (mode: boolean) => void
+  setEnableAutoUpdates: (enable: boolean) => void
   setSidebarOpen: (open: boolean) => void
+}
+
+function getAutoUpdatesEnabled(): boolean {
+  try {
+    const stored = localStorage.getItem('enableAutoUpdates')
+    return stored === null ? true : stored === 'true'
+  } catch {
+    return true
+  }
+}
+
+function setAutoUpdatesEnabledStorage(enabled: boolean): void {
+  try {
+    localStorage.setItem('enableAutoUpdates', String(enabled))
+  } catch {
+    // Silently fail if localStorage is not available
+  }
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -30,6 +49,7 @@ export const useUIStore = create<UIState>((set) => ({
   hideAmounts: false,
   showZeroPayments: false,
   presentationMode: getPresentationMode(), // Initialize from localStorage
+  enableAutoUpdates: getAutoUpdatesEnabled(), // Initialize from localStorage
   sidebarOpen: false,
 
   setTheme: (theme) => {
@@ -62,6 +82,12 @@ export const useUIStore = create<UIState>((set) => ({
     set({ presentationMode })
     // Store in localStorage (independent of database)
     setPresentationModeStorage(presentationMode)
+  },
+
+  setEnableAutoUpdates: (enableAutoUpdates) => {
+    set({ enableAutoUpdates })
+    // Store in localStorage (independent of database)
+    setAutoUpdatesEnabledStorage(enableAutoUpdates)
   },
 
   setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),

@@ -184,6 +184,8 @@
     "baseCurrency": "Базавая валюта",
     "hideAmounts": "Хаваць сумы па змаўчаннi",
     "showZeroPayments": "Паказваць нулявыя выплаты",
+    "enableAutoUpdates": "Аўтаматычныя абнаўленні прыложэння",
+    "enableAutoUpdatesDesc": "Прыложэнне будзе праверяць і скачваць абнаўленні ў фоне",
     "presentationMode": "Рэжым прэзентацыі",
     "exchangeRates": "Курсы валют",
     "refreshRates": "Абнавіць курсы",
