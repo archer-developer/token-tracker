@@ -9,6 +9,7 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  Download,
 } from 'lucide-react'
 import type { LedgerEntryType } from '@/db/types'
 import { useLedgerEntries } from '@/features/ledger/hooks/useLedgerEntries'
@@ -87,8 +88,13 @@ export function LedgerScreen() {
     <div className="mx-auto max-w-4xl px-4 py-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('ledger.title')}</h1>
-        <Button variant="secondary" size="sm" onClick={() => exportToCsv(entries)}>
-          {t('common.export')} CSV
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={<Download className="size-4" />}
+          onClick={() => exportToCsv(entries)}
+        >
+          <span className="hidden sm:inline">{t('common.export')} CSV</span>
         </Button>
       </div>
 
