@@ -1,7 +1,7 @@
 {
   "name": "tokens-tracker-scaffold",
   "private": true,
-  "version": "1.0.120",
+  "version": "1.0.121",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -13,6 +13,7 @@
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "screenshots": "SCREENSHOTS=1 playwright test e2e/screenshots.spec.ts",
     "prepare": "husky",
     "version:patch": "npm version patch --no-git-tag-version",
     "version:minor": "npm version minor --no-git-tag-version"

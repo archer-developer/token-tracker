@@ -175,7 +175,7 @@ test('payment schedule shows weighted January and later-period amounts', async (
 
 test('payment dates show correct month and year after accrual period', async ({ page }) => {
   const pageText = await page.locator('body').innerText()
-  expect(pageText).toContain('15.01.2025') // Dec 2024 period
+  // Period 0 (Dec 30–31, 2024) has 0 amount and is not rendered by the UI
   expect(pageText).toContain('15.02.2025') // Jan 2025 period
   expect(pageText).toContain('15.03.2025') // Feb 2025 period
   expect(pageText).toContain('15.03.2026') // Feb 2026 period — year must be 2026

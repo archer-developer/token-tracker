@@ -12,6 +12,7 @@ npm run dev          # Vite dev server → http://localhost:5173
 npm run test:run     # Vitest (unit) — runs once, no watch
 npm run test         # Vitest in watch mode
 npm run test:e2e     # Playwright e2e (needs dev server running or starts it via webServer config)
+npm run screenshots  # Run screenshots.spec.ts and save PNGs to docs/screenshots/
 npm run build        # tsc -b && vite build
 npm run lint         # eslint src/
 npm run format       # prettier --write src/
@@ -19,8 +20,15 @@ npm run version:patch  # bump patch version in package.json (1.0.x → 1.0.x+1)
 npm run version:minor  # bump minor version in package.json (1.x.0 → 1.x+1.0)
 ```
 
-Pre-commit hook: `lint-staged` (eslint + prettier on staged files) → `npm run test:run`.  
-**Commits are blocked if tests fail.**
+Pre-commit hook: `lint-staged` → `npm run test:run` → `npm run test:e2e`.  
+**Commits are blocked if any test fails (unit or e2e).**
+
+To take screenshots without committing, run `npm run screenshots` separately.
+
+### Git workflow
+
+**Never commit or push automatically.** Only create commits when explicitly asked.  
+Always show the changes first and wait for confirmation.
 
 ### Version bumping
 

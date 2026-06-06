@@ -15,8 +15,8 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     react(),
-    // HTTPS only needed for local dev server
-    ...(process.env.GITHUB_ACTIONS ? [] : [basicSsl()]),
+    // HTTPS only for interactive dev; disabled in CI and when Playwright starts the server
+    ...(process.env.GITHUB_ACTIONS || process.env.E2E ? [] : [basicSsl()]),
     VitePWA({
       registerType: 'prompt',
       manifest: {
