@@ -66,6 +66,7 @@ export default function InstrumentDetailScreen() {
   const [maturedPayments, setMaturedPayments] = useState<PaymentRecord[]>([])
   const [defaultModalOpen, setDefaultModalOpen] = useState(false)
   const [defaultForm, setDefaultForm] = useState<DefaultFormState>(emptyDefaultForm)
+  const [soldConfirmOpen, setSoldConfirmOpen] = useState(false)
   const paymentSummary = usePaymentSummary(instrumentId ?? 0)
 
   if (instrument === null) {
@@ -141,6 +142,7 @@ export default function InstrumentDetailScreen() {
     if (instrument?.id == null) return
     const now = new Date().toISOString()
     await db.instruments.update(instrument.id, { status: 'sold', updatedAt: now })
+    setSoldConfirmOpen(false)
   }
 
   async function handleMarkDefaulted() {
@@ -247,7 +249,7 @@ export default function InstrumentDetailScreen() {
               variant="secondary"
               size="sm"
               icon={<TrendingUp className="size-4" />}
-              onClick={handleMarkSold}
+              onClick={() => setSoldConfirmOpen(true)}
             >
               {t('instrument.markSold')}
             </Button>
@@ -438,6 +440,15 @@ export default function InstrumentDetailScreen() {
           )}
         </div>
       </Modal>
+
+      {/* Sold confirm */}
+      <ConfirmDialog
+        open={soldConfirmOpen}
+        title={t('instrument.markSold')}
+        message={t('instrument.markSoldConfirm', { name: instrument.name })}
+        onConfirm={() => void handleMarkSold()}
+        onCancel={() => setSoldConfirmOpen(false)}
+      />
 
       {/* Delete confirm */}
       <ConfirmDialog
