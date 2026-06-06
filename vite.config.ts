@@ -14,7 +14,7 @@ export default defineConfig({
     // HTTPS only needed for local dev server
     ...(process.env.GITHUB_ACTIONS ? [] : [basicSsl()]),
     VitePWA({
-      registerType: 'auto',
+      registerType: 'prompt',
       manifest: {
         name: 'Tokens Tracker',
         short_name: 'Tokens',
