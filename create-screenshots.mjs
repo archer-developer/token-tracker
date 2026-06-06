@@ -238,13 +238,36 @@ async function takeScreenshots() {
     // Screenshot 3: Instrument Detail
     console.log('📸 3/7 Детали инструмента (Detail)...')
     try {
-      // Try to find and click on first instrument link
-      const firstInstrument = await page.locator('a').filter({ hasText: /\w/ }).first()
-      await firstInstrument.click({ timeout: 5000 })
+      // Find table rows with instrument data
+      const tableRows = page.locator('table tbody tr')
+      const rowCount = await tableRows.count()
+      console.log(`   Найдено ${rowCount} строк в таблице инструментов`)
+
+      if (rowCount > 0) {
+        // Click on first table row (or find the link in it)
+        const firstRow = tableRows.first()
+
+        // Try to find and click a link in the row
+        const rowLink = firstRow.locator('a').first()
+        const linkCount = await rowLink.count()
+
+        if (linkCount > 0) {
+          console.log('   ✓ Найдена ссылка на инструмент в таблице')
+          await rowLink.click()
+          console.log('   → Открываем детали инструмента...')
+        } else {
+          // If no link, try clicking the row itself
+          console.log('   ✗ Ссылки не найдены, пытаемся кликнуть на строку...')
+          await firstRow.click()
+        }
+      } else {
+        console.log('   ⚠️  Таблица с инструментами не найдена')
+        throw new Error('No instruments found')
+      }
     } catch (e) {
-      console.log('⚠️  Не удалось найти инструмент, пропускаем...')
+      console.log(`   ✗ Ошибка: ${e.message}`)
     }
-    await page.waitForTimeout(1500)
+    await page.waitForTimeout(2000)
     await page.screenshot({
       path: path.join(SCREENSHOTS_DIR, '03-instrument-detail.png'),
       fullPage: false,
@@ -252,16 +275,24 @@ async function takeScreenshots() {
 
     // Screenshot 4: Payments Section
     console.log('📸 4/7 Выплаты (Payments)...')
-    const paymentsSection = page.locator('text=Выплаты, text=Payment')
-    if (await paymentsSection.isVisible()) {
-      await paymentsSection.scrollIntoViewIfNeeded()
-      await page.waitForTimeout(800)
-      await page.screenshot({
-        path: path.join(SCREENSHOTS_DIR, '04-payments.png'),
-        fullPage: false,
-      })
-    } else {
-      console.log('⚠️  Раздел "Выплаты" не найден, пропускаем...')
+    try {
+      // Look for payments section heading
+      const paymentsSection = page.locator('text=Выплаты')
+      const count = await paymentsSection.count()
+
+      if (count > 0) {
+        console.log('   ✓ Раздел "Выплаты" найден')
+        await paymentsSection.first().scrollIntoViewIfNeeded()
+        await page.waitForTimeout(1000)
+        await page.screenshot({
+          path: path.join(SCREENSHOTS_DIR, '04-payments.png'),
+          fullPage: false,
+        })
+      } else {
+        console.log('   ⚠️  Раздел "Выплаты" не найден, пропускаем...')
+      }
+    } catch (e) {
+      console.log(`   ✗ Ошибка: ${e.message}`)
     }
 
     // Screenshot 5: Calendar
