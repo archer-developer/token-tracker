@@ -85,11 +85,28 @@ export function SettingsScreen() {
   const handleCheckUpdates = async () => {
     setCheckingUpdates(true)
     try {
-      // Simply reload the page to check for updates and refresh the app
-      // Service Worker will update the cached files if available
+      if (!('serviceWorker' in navigator)) {
+        window.location.reload()
+        return
+      }
+      const registration = await navigator.serviceWorker.getRegistration()
+      if (!registration) {
+        window.location.reload()
+        return
+      }
+      // Reload once the new SW takes control; fallback after 3s if no update found
+      const reloadTimeout = setTimeout(() => window.location.reload(), 3000)
+      navigator.serviceWorker.addEventListener(
+        'controllerchange',
+        () => {
+          clearTimeout(reloadTimeout)
+          window.location.reload()
+        },
+        { once: true },
+      )
+      await registration.update()
+    } catch {
       window.location.reload()
-    } finally {
-      setCheckingUpdates(false)
     }
   }
 
