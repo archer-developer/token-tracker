@@ -390,7 +390,7 @@ export function SettingsScreen() {
               {presentationModeLoading && <Spinner className="size-4" />}
             </div>
             <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">
-              Заполняет БД демо-данными для презентаций и тестирования
+              {t('settings.presentationModeDesc')}
             </p>
           </div>
         </div>

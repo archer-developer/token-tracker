@@ -189,6 +189,7 @@
     "checkingUpdates": "Проверка обновлений...",
     "updateInfo": "Нажмите кнопку выше для проверки и установки обновлений",
     "presentationMode": "Режим презентации",
+    "presentationModeDesc": "Заполняет БД демо-данными для презентаций и тестирования",
     "exchangeRates": "Курсы валют",
     "refreshRates": "Обновить курсы",
     "refreshRatesShort": "Обновить",
