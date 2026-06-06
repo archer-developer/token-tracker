@@ -223,7 +223,7 @@ async function takeScreenshots() {
     console.log('📸 1/7 Портфель (Portfolio)...')
     await page.screenshot({
       path: path.join(SCREENSHOTS_DIR, '01-portfolio.png'),
-      fullPage: false,
+      fullPage: true,
     })
 
     // Screenshot 2: Instruments List
@@ -232,7 +232,7 @@ async function takeScreenshots() {
     await page.waitForTimeout(1500)
     await page.screenshot({
       path: path.join(SCREENSHOTS_DIR, '02-instruments.png'),
-      fullPage: false,
+      fullPage: true,
     })
 
     // Screenshot 3: Instrument Detail
@@ -270,7 +270,7 @@ async function takeScreenshots() {
     await page.waitForTimeout(2000)
     await page.screenshot({
       path: path.join(SCREENSHOTS_DIR, '03-instrument-detail.png'),
-      fullPage: false,
+      fullPage: true,
     })
 
     // Screenshot 4: Payments Section
@@ -286,7 +286,7 @@ async function takeScreenshots() {
         await page.waitForTimeout(1000)
         await page.screenshot({
           path: path.join(SCREENSHOTS_DIR, '04-payments.png'),
-          fullPage: false,
+          fullPage: true,
         })
       } else {
         console.log('   ⚠️  Раздел "Выплаты" не найден, пропускаем...')
@@ -301,7 +301,7 @@ async function takeScreenshots() {
     await page.waitForTimeout(1500)
     await page.screenshot({
       path: path.join(SCREENSHOTS_DIR, '05-calendar.png'),
-      fullPage: false,
+      fullPage: true,
     })
 
     // Screenshot 6: Ledger
@@ -310,7 +310,7 @@ async function takeScreenshots() {
     await page.waitForTimeout(1500)
     await page.screenshot({
       path: path.join(SCREENSHOTS_DIR, '06-ledger.png'),
-      fullPage: false,
+      fullPage: true,
     })
 
     // Screenshot 7: Settings
@@ -319,7 +319,7 @@ async function takeScreenshots() {
     await page.waitForTimeout(1500)
     await page.screenshot({
       path: path.join(SCREENSHOTS_DIR, '07-settings.png'),
-      fullPage: false,
+      fullPage: true,
     })
 
     console.log('\n✅ Все скриншоты успешно созданы!')
