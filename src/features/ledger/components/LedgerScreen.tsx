@@ -63,6 +63,14 @@ export function LedgerScreen() {
 
   const entries = useLedgerEntries(filter || undefined, search)
 
+  if (process.env.NODE_ENV === 'development' && entries.length > 0) {
+    console.log('[LedgerScreen] First entry:', {
+      instrumentName: entries[0].instrumentName,
+      instrumentCurrency: entries[0].instrumentCurrency,
+      amount: entries[0].amount,
+    })
+  }
+
   const totalPages = Math.ceil(entries.length / PAGE_SIZE)
   const displayed = entries.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
