@@ -95,7 +95,9 @@
     "type_coupon": "Купон",
     "type_redemption": "Погашение",
     "type_recovery": "Возврат",
-    "history": "История"
+    "history": "История",
+    "totalPaid": "Выплачено",
+    "totalRemaining": "Осталось выплатить"
   },
   "ledger": {
     "title": "Журнал денежных потоков",

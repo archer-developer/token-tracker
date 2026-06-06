@@ -17,6 +17,7 @@ import { Modal } from '@/shared/components/Modal'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { Spinner } from '@/shared/components/Spinner'
 import { useInstrument } from '@/features/instruments/hooks/useInstruments'
+import { usePaymentSummary } from '@/features/instruments/hooks/usePaymentSummary'
 import { PurchaseLotList } from '@/features/purchaseLots/components/PurchaseLotList'
 import { PaymentList } from '@/features/payments/components/PaymentList'
 import { db } from '@/db/db'
@@ -65,6 +66,7 @@ export default function InstrumentDetailScreen() {
   const [maturedPayments, setMaturedPayments] = useState<PaymentRecord[]>([])
   const [defaultModalOpen, setDefaultModalOpen] = useState(false)
   const [defaultForm, setDefaultForm] = useState<DefaultFormState>(emptyDefaultForm)
+  const paymentSummary = usePaymentSummary(instrumentId ?? 0)
 
   if (instrument === null) {
     // still loading
@@ -366,6 +368,22 @@ export default function InstrumentDetailScreen() {
             </dl>
           </div>
         )}
+      </div>
+
+      {/* Payment summary metrics */}
+      <div className="mb-6 grid grid-cols-2 gap-3">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+          <p className="text-xs text-gray-500 dark:text-gray-400">{t('payment.totalPaid')}</p>
+          <p className="mt-1 text-lg font-semibold text-gray-900 tabular-nums dark:text-gray-100">
+            {formatCurrency(paymentSummary.totalPaid, instrument.currency)}
+          </p>
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
+          <p className="text-xs text-gray-500 dark:text-gray-400">{t('payment.totalRemaining')}</p>
+          <p className="mt-1 text-lg font-semibold text-gray-900 tabular-nums dark:text-gray-100">
+            {formatCurrency(paymentSummary.totalRemaining, instrument.currency)}
+          </p>
+        </div>
       </div>
 
       {/* Payments */}

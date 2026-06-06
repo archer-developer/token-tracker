@@ -95,7 +95,9 @@
     "type_coupon": "Купон",
     "type_redemption": "Пагашэнне",
     "type_recovery": "Вяртанне",
-    "history": "Гісторыя"
+    "history": "Гісторыя",
+    "totalPaid": "Выплачана",
+    "totalRemaining": "Засталося выплаціць"
   },
   "ledger": {
     "title": "Журнал грашовых патокаў",
