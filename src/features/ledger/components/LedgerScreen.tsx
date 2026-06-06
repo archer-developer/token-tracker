@@ -10,7 +10,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react'
-import type { Currency, LedgerEntryType } from '@/db/types'
+import type { LedgerEntryType } from '@/db/types'
 import { useLedgerEntries } from '@/features/ledger/hooks/useLedgerEntries'
 import { Button } from '@/shared/components/Button'
 import { Input } from '@/shared/components/Input'
@@ -18,7 +18,6 @@ import { Select } from '@/shared/components/Select'
 import { Badge } from '@/shared/components/Badge'
 import { EmptyState } from '@/shared/components/EmptyState'
 import { formatCurrency, formatDate } from '@/shared/utils/format'
-import { useUIStore } from '@/store/uiStore'
 
 const typeIcons: Record<LedgerEntryType, ReactNode> = {
   purchase: <ShoppingCart className="size-3.5" />,
@@ -38,13 +37,13 @@ const typeBadgeVariant: Record<LedgerEntryType, 'blue' | 'green' | 'gray' | 'yel
 
 const PAGE_SIZE = 10
 
-function exportToCsv(entries: ReturnType<typeof useLedgerEntries>, baseCurrency: Currency): void {
+function exportToCsv(entries: ReturnType<typeof useLedgerEntries>): void {
   const header = ['Date', 'Type', 'Instrument', 'Amount']
   const rows = entries.map((e) => [
     e.date,
     e.type,
     `"${e.instrumentName.replace(/"/g, '""')}"`,
-    formatCurrency(e.amount, baseCurrency),
+    formatCurrency(e.amount, e.instrumentCurrency),
   ])
   const csv = [header, ...rows].map((r) => r.join(',')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
@@ -58,7 +57,6 @@ function exportToCsv(entries: ReturnType<typeof useLedgerEntries>, baseCurrency:
 
 export function LedgerScreen() {
   const { t } = useTranslation()
-  const { baseCurrency } = useUIStore()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<LedgerEntryType | ''>('')
   const [page, setPage] = useState(0)
@@ -81,7 +79,7 @@ export function LedgerScreen() {
     <div className="mx-auto max-w-4xl px-4 py-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{t('ledger.title')}</h1>
-        <Button variant="secondary" size="sm" onClick={() => exportToCsv(entries, baseCurrency)}>
+        <Button variant="secondary" size="sm" onClick={() => exportToCsv(entries)}>
           {t('common.export')} CSV
         </Button>
       </div>
@@ -137,7 +135,7 @@ export function LedgerScreen() {
                       }`}
                     >
                       {entry.amount >= 0 ? '+' : ''}
-                      {formatCurrency(entry.amount, baseCurrency)}
+                      {formatCurrency(entry.amount, entry.instrumentCurrency)}
                     </span>
                   </div>
                 </div>
@@ -194,7 +192,7 @@ export function LedgerScreen() {
                       }`}
                     >
                       {entry.amount >= 0 ? '+' : ''}
-                      {formatCurrency(entry.amount, baseCurrency)}
+                      {formatCurrency(entry.amount, entry.instrumentCurrency)}
                     </td>
                   </tr>
                 ))}
