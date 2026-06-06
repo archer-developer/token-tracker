@@ -171,7 +171,7 @@ export function SettingsScreen() {
 
   const languageOptions: { value: Language; label: string }[] = [
     { value: 'ru', label: 'Русский' },
-    { value: 'be', label: 'Беларуская' },
+    { value: 'by', label: 'Беларуская' },
   ]
 
   const currencyOptions: { value: Currency; label: string }[] = [

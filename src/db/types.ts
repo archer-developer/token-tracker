@@ -1,6 +1,6 @@
 export type Currency = 'BYN' | 'USD' | 'EUR'
 export type Theme = 'light' | 'dark' | 'system'
-export type Language = 'ru' | 'be'
+export type Language = 'ru' | 'by'
 export type InstrumentStatus = 'active' | 'matured' | 'defaulted' | 'sold'
 export type PaymentFrequency = 'monthly' | 'quarterly' | 'custom'
 export type PaymentStatus = 'scheduled' | 'paid' | 'missed'

@@ -3,7 +3,7 @@ import type { Currency } from '@/db/types'
 
 function getLocale(): string {
   const lang = i18n.language
-  return lang === 'be' ? 'be-BY' : 'ru-BY'
+  return lang === 'by' ? 'be-BY' : 'ru-BY'
 }
 
 function getMonthName(monthIndex: number, length: 'long' | 'short' = 'long'): string {

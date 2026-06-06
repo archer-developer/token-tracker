@@ -57,7 +57,7 @@ src/
 │   ├── portfolio/    # Aggregate metrics + XIRR
 │   ├── purchaseLots/ # Purchase lot CRUD (triggers schedule regen)
 │   └── settings/     # Theme, lang, currency, LLM, backup
-├── locales/          # ru/, be/ translation JSONs
+├── locales/          # ru/, by/ translation JSONs
 ├── services/
 │   ├── exchangeRates/ # NBRB API client + cache
 │   ├── llm/           # LLM extraction service + prompt
@@ -186,8 +186,8 @@ Base currency stored in Settings, UI state in Zustand (`useUIStore().baseCurrenc
 
 ## Localisation
 
-Languages: **Russian** (`ru`, default) and **Belarusian** (`be`).
-Translation files: `src/locales/{ru,be}/translation.json`.
+Languages: **Russian** (`ru`, default) and **Belarusian** (`by`).
+Translation files: `src/locales/{ru,by}/translation.json`.
 Currency formatting uses `ru-BY` locale via `Intl.NumberFormat`.
 
 ---
