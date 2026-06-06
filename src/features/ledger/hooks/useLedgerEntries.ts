@@ -36,13 +36,6 @@ export function useLedgerEntries(
           instrumentName: instrument?.name ?? '',
           instrumentCurrency: instrument?.currency ?? 'BYN',
         }
-        if (
-          process.env.NODE_ENV === 'development' &&
-          entries.length > 0 &&
-          entries[0].id === entry.id
-        ) {
-          console.log('[Ledger] Sample entry currency:', mappedEntry.instrumentCurrency)
-        }
         return mappedEntry
       })
 
