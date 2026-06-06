@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { CircleCheck, CircleX, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { PaymentRecord, PaymentStatus } from '@/db/types'
 import { usePayments } from '@/features/payments/hooks/usePayments'
+import { useInstrument } from '@/features/instruments/hooks/useInstruments'
 import { db } from '@/db/db'
 import { Badge } from '@/shared/components/Badge'
 import { Button } from '@/shared/components/Button'
@@ -41,8 +42,9 @@ interface MarkPaidState {
 
 export function PaymentList({ instrumentId }: Props) {
   const { t } = useTranslation()
-  const { baseCurrency, showZeroPayments } = useUIStore()
+  const { showZeroPayments } = useUIStore()
   const payments = usePayments(instrumentId)
+  const instrument = useInstrument(instrumentId)
 
   const [tab, setTab] = useState<Tab>('upcoming')
   const [page, setPage] = useState(0)
@@ -183,14 +185,14 @@ export function PaymentList({ instrumentId }: Props) {
                       <span className="text-gray-600 dark:text-gray-400">
                         {t('payment.expected')}:{' '}
                         <span className="font-medium text-gray-900 dark:text-gray-100">
-                          {formatCurrency(payment.expectedAmount, baseCurrency)}
+                          {formatCurrency(payment.expectedAmount, instrument?.currency ?? 'BYN')}
                         </span>
                       </span>
                       {payment.actualAmount != null && (
                         <span className="text-gray-600 dark:text-gray-400">
                           {t('payment.actual')}:{' '}
                           <span className="font-medium text-green-600 dark:text-green-400">
-                            {formatCurrency(payment.actualAmount, baseCurrency)}
+                            {formatCurrency(payment.actualAmount, instrument?.currency ?? 'BYN')}
                           </span>
                         </span>
                       )}
