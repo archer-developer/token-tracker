@@ -154,8 +154,10 @@ export function SettingsScreen() {
 
   async function handleExport() {
     const content = await exportBackup()
-    const date = new Date().toISOString().slice(0, 10)
+    const now = new Date().toISOString()
+    const date = now.slice(0, 10)
     downloadJson(content, `tokens-tracker-backup-${date}.json`)
+    await updateSettings({ lastBackupAt: now })
   }
 
   function handleImportClick() {

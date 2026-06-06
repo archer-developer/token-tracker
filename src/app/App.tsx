@@ -4,6 +4,7 @@ import { routes } from './routes'
 import { Sidebar } from '@/shared/components/Sidebar'
 import { BottomTabBar } from '@/shared/components/BottomTabBar'
 import { InstallBanner } from '@/shared/components/InstallBanner'
+import { BackupReminderBanner } from '@/shared/components/BackupReminderBanner'
 import { useUIStore, applyTheme } from '@/store/uiStore'
 import { getSettings } from '@/db/db'
 import { refreshExchangeRatesIfNeeded } from '@/services/exchangeRates/NBRBClient'
@@ -64,6 +65,7 @@ export default function App() {
       </div>
       <BottomTabBar />
       <InstallBanner />
+      <BackupReminderBanner />
     </div>
   )
 }
