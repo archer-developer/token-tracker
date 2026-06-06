@@ -1,5 +1,7 @@
 # Трекер коммерческих токенов Беларуси
 
+[![Deploy to GitHub Pages](https://github.com/archer-developer/token-tracker/actions/workflows/deploy.yml/badge.svg)](https://github.com/archer-developer/token-tracker/actions/workflows/deploy.yml)
+
 Personal investment tracker для токенизированных облигаций на платформах Fainex/Finstore.
 
 ## ✨ Особенности
