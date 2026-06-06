@@ -1,73 +1,229 @@
-# React + TypeScript + Vite
+# Трекер коммерческих токенов Беларуси
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Personal investment tracker для токенизированных облигаций на платформах Fainex/Finstore.
 
-Currently, two official plugins are available:
+## ✨ Особенности
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- 📊 **Агрегированные метрики** — XIRR, P&L, текущие убытки, прогнозы
+- 💼 **Управление портфелем** — добавление инструментов, отслеживание выплат
+- 📅 **Календарь выплат** — месячный обзор всех платежей
+- 💰 **Конвертация валют** — автоматическое обновление курсов NBRB
+- 📊 **Интерактивные графики** — история и прогноз P&L
+- 🌍 **Мультиязычность** — русский и беларусский
+- 🌓 **Темная тема** — поддержка светлой/темной темы
+- 💾 **Полностью локально** — все данные хранятся в браузере (IndexedDB)
+- 📱 **Адаптивный дизайн** — мобильная и десктопная версии
 
-## React Compiler
+## 📚 Документация для пользователей
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **[Руководство пользователя](./docs/USER_GUIDE_RU.md)** — подробное описание всех функций и метрик
+- **[Описание экранов](./docs/SCREENS_RU.md)** — как выглядят и работают все экраны
+- **[Глоссарий](./docs/Domain_Glossary_RU.md)** — инвестиционные термины и определения
+- **[Архитектура](./docs/ARCHITECTURE.md)** — техническое описание проекта (для разработчиков)
 
-## Expanding the ESLint configuration
+## 🚀 Быстрый старт
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Для пользователей
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. Откройте приложение в браузере (необходим доступ в интернет для первой загрузки)
+2. Перейдите в **Настройки** → **Валюта** и выберите нужную (BYN, USD, EUR)
+3. Начните добавлять инструменты в **Инструменты** → **Добавить**
+4. Вводите лоты покупки и выплаты по мере их появления
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Для разработчиков
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+# Установка зависимостей
+npm install
+
+# Запуск dev сервера
+npm run dev
+
+# Запуск тестов
+npm run test
+
+# Сборка продакшена
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🏗️ Архитектура
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **UI Framework:** React 19 + TypeScript
+- **Маршрутизация:** React Router v7
+- **База данных:** Dexie (IndexedDB) v4.4
+- **UI Components:** Tailwind CSS v4.3
+- **Состояние:** Zustand v5
+- **Интернационализация:** i18next v17
+- **Тесты:** Vitest + Playwright
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Полное описание см. в [ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+
+## 📊 Ключевые метрики
+
+### Портфель (Portfolio)
+
+На главном дашборде рассчитываются следующие метрики:
+
+| Метрика            | Описание                    | Формула                                    |
+| ------------------ | --------------------------- | ------------------------------------------ |
+| **Total Invested** | Общая сумма инвестиций      | Σ (quantity × price_per_token)             |
+| **Total Paid**     | Получено дохода             | Σ выплаты со статусом "Выплачено"          |
+| **Current Loss**   | Убытки от дефолтов          | Σ (principal − recovery)                   |
+| **P&L**            | Прибыль/убыток              | Total Paid + Current Loss − Total Invested |
+| **XIRR**           | Внутренняя норма доходности | Решение уравнения NPV = 0                  |
+| **Remaining**      | Осталось получить           | Σ (купоны + основная сумма)                |
+
+Подробное описание каждой метрики см. в [Руководстве пользователя](./docs/USER_GUIDE_RU.md#дашборд-портфеля).
+
+## 💳 Курсы валют
+
+Приложение автоматически получает актуальные курсы с официального API NBRB (Национального банка Республики Беларусь):
+
+- **USD** — курс доллара США
+- **EUR** — курс евро
+- **BYN** — белорусский рубль (базовая валюта)
+
+**Обновление:** Два раза в день (до полудня и после полудня)
+
+Вы можете также обновить курсы вручную в Настройках → Курсы валют → [Обновить]
+
+## 🔒 Конфиденциальность
+
+✅ **Полная конфиденциальность:** Все данные хранятся локально в браузере  
+✅ **Никакого трекинга:** Приложение не отправляет ваши данные на сервер  
+✅ **Open Source:** Весь код открыт и доступен для аудита
+
+## 📱 Поддерживаемые браузеры
+
+- Chrome/Chromium (≥ 90)
+- Firefox (≥ 88)
+- Safari (≥ 14)
+- Edge (≥ 90)
+
+## 🎯 Режим презентации
+
+Для демонстраций и тестирования можно включить режим презентации:
+
+1. Перейти в **Настройки**
+2. Включить переключатель **"Режим презентации"**
+3. Приложение загрузит пример с реальными инструментами и данными
+
+## 📝 Резервные копии
+
+Вы можете экспортировать и импортировать все данные:
+
+1. **Экспортировать:** Настройки → Резервная копия → [Экспортировать] → Сохранится JSON файл
+2. **Импортировать:** Настройки → Резервная копия → [Импортировать] → Выбрать JSON файл
+
+Это полезно для:
+
+- Переноса данных между устройствами
+- Создания резервной копии
+- Обмена данными
+
+## 🤖 LLM интеграция
+
+Приложение может автоматически извлекать данные из PDF документов (White Paper) с помощью LLM:
+
+1. Настроить подключение: Настройки → LLM Integration
+2. При добавлении инструмента нажать [Извлечь из White Paper (PDF)]
+3. Загрузить PDF документ
+4. Поля формы заполнятся автоматически
+
+Поддерживает любой API, совместимый с OpenAI (GPT, Claude и т.д.)
+
+## 📊 Примеры расчетов
+
+### Пример 1: XIRR расчет
+
 ```
+Дата        Операция                Сумма (USD)
+01.01.2025  Инвестиция             -10,000
+15.03.2025  Купон                  +550
+15.06.2025  Купон                  +550
+15.09.2025  Купон                  +550
+15.12.2025  Купон + Погашение      +10,550
+
+XIRR = 5.2% годовых
+```
+
+### Пример 2: P&L расчет
+
+```
+Total Invested:      10,000 USD
+Total Paid (купоны): 2,200 USD
+Current Loss:        0 USD
+─────────────────────────────────
+P&L:                 -7,800 USD (убыток)
+```
+
+Подробные примеры см. в [Руководстве пользователя](./docs/USER_GUIDE_RU.md).
+
+## 🛠️ Разработка
+
+### Команды
+
+```bash
+# Запуск dev сервера с HMR
+npm run dev
+
+# Запуск тестов в watch режиме
+npm run test
+
+# Запуск тестов один раз
+npm run test:run
+
+# E2E тесты (Playwright)
+npm run test:e2e
+
+# Линтинг
+npm run lint
+
+# Форматирование кода
+npm run format
+
+# Сборка для продакшена
+npm run build
+
+# Проверка типов
+npm run type-check
+```
+
+### Структура проекта
+
+```
+src/
+├── app/              # Точка входа, routes, i18n config
+├── db/               # Dexie схема, types, backup/restore
+├── features/
+│   ├── calendar/     # Месячный календарь выплат
+│   ├── instruments/  # CRUD инструментов
+│   ├── ledger/       # История денежных потоков
+│   ├── payments/     # Генерация и отслеживание выплат
+│   ├── portfolio/    # Дашборд с метриками
+│   ├── purchaseLots/ # Управление лотами покупки
+│   └── settings/     # Конфигурация приложения
+├── locales/          # Переводы (ru/, by/)
+├── services/
+│   ├── exchangeRates/# NBRB API client
+│   ├── llm/          # LLM extraction service
+│   └── xirr/         # XIRR калькулятор
+├── shared/
+│   ├── components/   # UI компоненты
+│   └── utils/        # Вспомогательные функции
+└── store/            # Zustand UI state
+```
+
+Полное описание см. в [ARCHITECTURE.md](./docs/ARCHITECTURE.md).
+
+## 📄 Лицензия
+
+MIT License — см. LICENSE файл
+
+## 🤝 Контрибьютинг
+
+Приложение находится в активной разработке. Идеи и улучшения приветствуются!
+
+---
+
+**Начните отслеживать свои инвестиции прямо сейчас!** 📈
