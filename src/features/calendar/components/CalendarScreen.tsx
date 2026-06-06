@@ -16,7 +16,6 @@ import {
 import type { Currency, PaymentStatus } from '@/db/types'
 
 const DAY_NAMES = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
-const CURRENCIES: Currency[] = ['BYN', 'USD', 'EUR']
 
 function dotClass(status: PaymentStatus): string {
   if (status === 'paid') return 'bg-green-500'
@@ -36,15 +35,6 @@ async function markPayment(id: number, status: PaymentStatus): Promise<void> {
     paidAt: status === 'paid' ? new Date().toISOString() : undefined,
     actualAmount: undefined,
   })
-}
-
-function makeConvert(rateMap: Map<Currency, number>) {
-  return function convert(amount: number, from: Currency, to: Currency): number {
-    if (from === to) return amount
-    const fromRate = from === 'BYN' ? 1 : (rateMap.get(from) ?? 1)
-    const toRate = to === 'BYN' ? 1 : (rateMap.get(to) ?? 1)
-    return (amount * fromRate) / toRate
-  }
 }
 
 interface DayModalProps {
@@ -124,7 +114,6 @@ export default function CalendarScreen() {
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
-  const [displayCurrency, setDisplayCurrency] = useState<Currency>(baseCurrency)
 
   const rawDayPaymentsMap = useCalendarPayments(year, month)
 
@@ -141,11 +130,6 @@ export default function CalendarScreen() {
         }
         return filtered
       })()
-
-  const exchangeRates = useLiveQuery(() => db.exchangeRates.toArray(), [], [])
-  const rateMap = new Map<Currency, number>()
-  for (const r of exchangeRates ?? []) rateMap.set(r.currency as Currency, r.rate)
-  const convert = makeConvert(rateMap)
 
   function prevMonth() {
     if (month === 0) {
@@ -172,7 +156,7 @@ export default function CalendarScreen() {
   const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7
   const daysInMonth = new Date(year, month + 1, 0).getDate()
 
-  // Per-currency totals
+  // Per-currency totals (in original currency)
   const currencyTotals = new Map<Currency, { expected: number; paid: number; missed: number }>()
   for (const [, entries] of dayPaymentsMap) {
     for (const { payment, instrumentCurrency } of entries) {
@@ -184,16 +168,6 @@ export default function CalendarScreen() {
     }
   }
 
-  // Grand totals in displayCurrency
-  let grandExpected = 0
-  let grandPaid = 0
-  let grandMissed = 0
-  for (const [currency, totals] of currencyTotals) {
-    grandExpected += convert(totals.expected, currency, displayCurrency)
-    grandPaid += convert(totals.paid, currency, displayCurrency)
-    grandMissed += convert(totals.missed, currency, displayCurrency)
-  }
-
   const hasAnyPayment = dayPaymentsMap.size > 0
   const activeCurrencies = [...currencyTotals.keys()]
 
@@ -202,34 +176,32 @@ export default function CalendarScreen() {
   const totalCells = firstWeekday + daysInMonth
   const paddedCells = Math.ceil(totalCells / 7) * 7
 
+  // Grand totals in baseCurrency
+  const exchangeRates = useLiveQuery(() => db.exchangeRates.toArray(), [], [])
+  const rateMap = new Map<Currency, number>()
+  for (const r of exchangeRates ?? []) rateMap.set(r.currency as Currency, r.rate)
+
+  function convert(amount: number, from: Currency, to: Currency): number {
+    if (from === to) return amount
+    const fromRate = from === 'BYN' ? 1 : (rateMap.get(from) ?? 1)
+    const toRate = to === 'BYN' ? 1 : (rateMap.get(to) ?? 1)
+    return (amount * fromRate) / toRate
+  }
+
+  let grandExpected = 0
+  let grandPaid = 0
+  let grandMissed = 0
+  for (const [currency, totals] of currencyTotals) {
+    grandExpected += convert(totals.expected, currency, baseCurrency)
+    grandPaid += convert(totals.paid, currency, baseCurrency)
+    grandMissed += convert(totals.missed, currency, baseCurrency)
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-6">
       <h1 className="mb-6 text-2xl font-bold text-gray-900 dark:text-gray-100">
         {t('calendar.title')}
       </h1>
-
-      {/* Currency selector */}
-      <div className="mb-4 flex items-center gap-2">
-        <span className="text-sm text-gray-500 dark:text-gray-400">
-          {t('calendar.displayCurrency')}:
-        </span>
-        <div className="flex overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-          {CURRENCIES.map((c) => (
-            <button
-              key={c}
-              onClick={() => setDisplayCurrency(c)}
-              className={[
-                'px-3 py-1 text-sm font-medium transition-colors',
-                displayCurrency === c
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-white text-gray-600 hover:bg-gray-50 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800',
-              ].join(' ')}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Month navigation */}
       <div className="mb-4 flex items-center justify-between">
@@ -278,11 +250,6 @@ export default function CalendarScreen() {
               year === today.getFullYear()
             const entries = isValid ? (dayPaymentsMap.get(day) ?? []) : []
             const hasPayments = entries.length > 0
-            const cellTotal = entries.reduce(
-              (s, e) =>
-                s + convert(e.payment.expectedAmount, e.instrumentCurrency, displayCurrency),
-              0,
-            )
 
             return (
               <div
@@ -324,10 +291,6 @@ export default function CalendarScreen() {
                             <span className="text-[10px] text-gray-400">+{entries.length - 4}</span>
                           )}
                         </div>
-
-                        <p className="mt-0.5 hidden truncate text-[10px] text-gray-500 tabular-nums md:block dark:text-gray-400">
-                          {formatCurrency(cellTotal, displayCurrency)}
-                        </p>
                       </>
                     )}
                   </>
@@ -382,7 +345,7 @@ export default function CalendarScreen() {
               <>
                 <div className="border-t border-gray-200 pt-2 dark:border-gray-700">
                   <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-                    {t('calendar.total')} {displayCurrency}
+                    {t('calendar.total')} {baseCurrency}
                   </span>
                 </div>
                 <div className="grid grid-cols-3 items-center gap-3">
@@ -391,7 +354,7 @@ export default function CalendarScreen() {
                       {t('calendar.expected')}
                     </p>
                     <p className="mt-1 text-sm font-semibold text-gray-900 tabular-nums dark:text-gray-100">
-                      {formatCurrency(grandExpected, displayCurrency)}
+                      {formatCurrency(grandExpected, baseCurrency)}
                     </p>
                   </div>
                   <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
@@ -399,7 +362,7 @@ export default function CalendarScreen() {
                       {t('payment.status_paid')}
                     </p>
                     <p className="mt-1 text-sm font-semibold text-green-600 tabular-nums dark:text-green-400">
-                      {formatCurrency(grandPaid, displayCurrency)}
+                      {formatCurrency(grandPaid, baseCurrency)}
                     </p>
                   </div>
                   <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
@@ -407,7 +370,7 @@ export default function CalendarScreen() {
                       {t('payment.status_missed')}
                     </p>
                     <p className="mt-1 text-sm font-semibold text-red-600 tabular-nums dark:text-red-400">
-                      {formatCurrency(grandMissed, displayCurrency)}
+                      {formatCurrency(grandMissed, baseCurrency)}
                     </p>
                   </div>
                 </div>
