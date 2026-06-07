@@ -15,6 +15,8 @@ import {
   Eye,
   EyeOff,
   ChevronDown,
+  Copy,
+  Check,
 } from 'lucide-react'
 import type {
   Currency,
@@ -78,6 +80,20 @@ export function SettingsScreen() {
 
   // Presentation mode loading
   const [presentationModeLoading, setPresentationModeLoading] = useState(false)
+
+  // Donate
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
+  const wallets = [
+    { label: 'TON', address: 'UQCtKlxlNTchgWoGrV6ORuJI3jk2ThDyN6SkCKIBzShqMHBt' },
+    { label: 'USDT ERC20', address: '0x5ca8bbb7f86fff5a39ccac7c717a2f4bc049e7f1' },
+    { label: 'USDT TRC20', address: 'TM4YgFBDxFRn4KcpanMwYNxbwjS5fMfn9x' },
+  ]
+  function handleCopy(key: string, address: string) {
+    void navigator.clipboard.writeText(address).then(() => {
+      setCopiedKey(key)
+      setTimeout(() => setCopiedKey(null), 2000)
+    })
+  }
 
   // Check for updates
   const [checkingUpdates, setCheckingUpdates] = useState(false)
@@ -462,7 +478,7 @@ export function SettingsScreen() {
       <div className="mb-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
         <button
           onClick={() => setLlmExpanded(!llmExpanded)}
-          className="mb-4 flex w-full items-center justify-between text-left transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
+          className="flex w-full items-center justify-between text-left transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
         >
           <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
             {t('settings.llm')}
@@ -473,6 +489,9 @@ export function SettingsScreen() {
             }`}
           />
         </button>
+        <p className="mt-1 mb-4 text-sm text-gray-500 dark:text-gray-400">
+          {t('settings.llmDesc')}
+        </p>
 
         {llmExpanded && (
           <div className="flex flex-col gap-4">
@@ -599,6 +618,40 @@ export function SettingsScreen() {
           <p className="text-xs text-amber-700 dark:text-amber-300">
             {t('settings.presentationModeDesc')}
           </p>
+        </div>
+      </div>
+
+      {/* Donate section */}
+      <div className="mb-4 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-900">
+        <h2 className="mb-1 text-base font-semibold text-gray-900 dark:text-gray-100">
+          {t('settings.donate')}
+        </h2>
+        <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">{t('settings.donateDesc')}</p>
+        <div className="flex flex-col gap-2">
+          {wallets.map(({ label, address }) => (
+            <div
+              key={label}
+              className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 dark:border-gray-700 dark:bg-gray-800"
+            >
+              <span className="w-24 shrink-0 text-xs font-semibold text-indigo-600 dark:text-indigo-400">
+                {label}
+              </span>
+              <span className="min-w-0 flex-1 truncate font-mono text-xs text-gray-700 dark:text-gray-300">
+                {address}
+              </span>
+              <button
+                onClick={() => handleCopy(label, address)}
+                title={t('settings.donateCopy')}
+                className="shrink-0 rounded p-1 text-gray-400 transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
+              >
+                {copiedKey === label ? (
+                  <Check className="size-4 text-green-500" />
+                ) : (
+                  <Copy className="size-4" />
+                )}
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 
