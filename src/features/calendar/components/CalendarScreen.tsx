@@ -29,12 +29,29 @@ function statusVariant(status: PaymentStatus): 'green' | 'red' | 'blue' {
   return 'blue'
 }
 
-async function markPayment(id: number, status: PaymentStatus): Promise<void> {
-  await db.paymentRecords.update(id, {
-    status,
-    paidAt: status === 'paid' ? new Date().toISOString() : undefined,
-    actualAmount: undefined,
-  })
+async function markPayment(entry: CalendarPaymentEntry, status: PaymentStatus): Promise<void> {
+  const { payment } = entry
+  if (!payment.id) return
+
+  if (status === 'paid') {
+    const paidAt = payment.paymentDateFrom
+    await db.transaction('rw', [db.paymentRecords, db.ledgerEntries], async () => {
+      await db.paymentRecords.update(payment.id!, {
+        status: 'paid',
+        paidAt,
+        actualAmount: payment.expectedAmount,
+      })
+      await db.ledgerEntries.add({
+        instrumentId: payment.instrumentId,
+        date: paidAt,
+        type: payment.type,
+        amount: payment.expectedAmount,
+        createdAt: new Date().toISOString(),
+      })
+    })
+  } else {
+    await db.paymentRecords.update(payment.id, { status })
+  }
 }
 
 interface DayModalProps {
@@ -83,7 +100,7 @@ function DayModal({ day, year, month, entries, onClose }: DayModalProps) {
                   size="sm"
                   variant="primary"
                   onClick={() => {
-                    void markPayment(payment.id!, 'paid')
+                    void markPayment({ payment, instrumentName, instrumentCurrency }, 'paid')
                   }}
                 >
                   <span className="hidden sm:inline">{t('payment.markPaid')}</span>
@@ -93,7 +110,7 @@ function DayModal({ day, year, month, entries, onClose }: DayModalProps) {
                   size="sm"
                   variant="danger"
                   onClick={() => {
-                    void markPayment(payment.id!, 'missed')
+                    void markPayment({ payment, instrumentName, instrumentCurrency }, 'missed')
                   }}
                 >
                   <span className="hidden sm:inline">{t('payment.markMissed')}</span>
