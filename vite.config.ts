@@ -20,8 +20,11 @@ export default defineConfig({
     VitePWA({
       registerType: 'prompt',
       manifest: {
-        name: 'Tokens Tracker',
-        short_name: 'Tokens',
+        name: 'Трекер коммерческих токенов',
+        short_name: 'Personal Tokens Tracker',
+        description:
+          'Трекер коммерческих токенов Финстор, Файнекс, Байнекс. Данные хранятся только в вашем браузере.',
+        lang: 'ru',
         theme_color: '#111827',
         background_color: '#111827',
         display: 'standalone',

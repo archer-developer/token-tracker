@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://archer-developer.github.io/token-tracker/sitemap.xml
