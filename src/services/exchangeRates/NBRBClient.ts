@@ -53,15 +53,15 @@ export async function fetchAndCacheRates(): Promise<void> {
   })
 }
 
-export async function refreshExchangeRatesIfNeeded(): Promise<void> {
+export async function refreshExchangeRatesIfNeeded(force = false): Promise<void> {
   try {
     const usdRate = await db.exchangeRates.get('USD')
-    if (needsRefresh(usdRate?.fetchedAt)) {
+    if (force || needsRefresh(usdRate?.fetchedAt)) {
       await fetchAndCacheRates()
     }
-    // Always update settings with current rate fetch timestamp
-    if (usdRate?.fetchedAt) {
-      await updateSettings({ exchangeRatesUpdatedAt: usdRate.fetchedAt })
+    const currentRate = await db.exchangeRates.get('USD')
+    if (currentRate?.fetchedAt) {
+      await updateSettings({ exchangeRatesUpdatedAt: currentRate.fetchedAt })
     }
   } catch {
     // silent — offline or API unavailable

@@ -40,7 +40,7 @@ import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { Spinner } from '@/shared/components/Spinner'
 import { Toggle } from '@/shared/components/Toggle'
 import { useUIStore } from '@/store/uiStore'
-import { formatDate } from '@/shared/utils/format'
+import { formatDateTime } from '@/shared/utils/format'
 import demoDataJson from '@/db/demo-data.json'
 
 export function SettingsScreen() {
@@ -135,7 +135,7 @@ export function SettingsScreen() {
     setRatesLoading(true)
     setRatesError(null)
     try {
-      await refreshExchangeRatesIfNeeded()
+      await refreshExchangeRatesIfNeeded(true)
     } catch (e) {
       setRatesError(e instanceof Error ? e.message : String(e))
     } finally {
@@ -449,7 +449,7 @@ export function SettingsScreen() {
             </Button>
             {settings?.exchangeRatesUpdatedAt && (
               <span className="text-xs text-gray-500 dark:text-gray-400">
-                {t('settings.lastUpdated')}: {formatDate(settings.exchangeRatesUpdatedAt)}
+                {t('settings.lastUpdated')}: {formatDateTime(settings.exchangeRatesUpdatedAt)}
               </span>
             )}
           </div>
