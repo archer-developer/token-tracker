@@ -148,7 +148,7 @@
     "recoveryRateColumn": "Узровень вяртання",
     "scenario_worst": "Найгоршы выпадак",
     "scenario_conservative": "Кансерватыўны",
-    "scenario_moderate": "Умерны",
+    "scenario_moderate": "Умераны",
     "scenario_optimistic": "Аптымістычны",
     "scenario_fullRecovery": "Поўнае вяртанне"
   },
@@ -190,7 +190,7 @@
     "appVersion": "Версія дадатка",
     "checkUpdates": "Праверыць абнаўленні",
     "checkingUpdates": "Праверка абнаўленняў...",
-    "updateInfo": "Акадзьміце кнопку вышэй для праверкі і ўстаноўкі абнаўленняў",
+    "updateInfo": "Нацiснiце кнопку вышэй для праверкі і ўстаноўкі абнаўленняў",
     "presentationMode": "Рэжым прэзентацыі",
     "presentationModeDesc": "Запаўняе БД дэма-данымі для прэзентацый і тэставання",
     "exchangeRates": "Курсы валют",
