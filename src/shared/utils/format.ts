@@ -12,12 +12,15 @@ function getMonthName(monthIndex: number, length: 'long' | 'short' = 'long'): st
 }
 
 export function formatCurrency(amount: number, currency: Currency): string {
-  return new Intl.NumberFormat(getLocale(), {
+  const formatted = new Intl.NumberFormat(getLocale(), {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount)
+
+  // Replace browser-generated Br with proper BYN symbol for consistency
+  return currency === 'BYN' ? formatted.replace(/Br\b/g, 'BYN') : formatted
 }
 
 export function formatPercent(value: number, decimals = 2): string {
