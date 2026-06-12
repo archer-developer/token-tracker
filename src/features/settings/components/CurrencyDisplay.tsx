@@ -22,23 +22,6 @@ export function CurrencyDisplay({
   const shouldHide = hideAmounts && !isRevealed()
 
   if (showFormatted && currency) {
-    if (currency === 'BYN') {
-      const formatted = formatCurrency(amount, currency)
-      const numberPart = formatted.replace(/\s?BYN\s?/g, '').trim()
-      return (
-        <button
-          onClick={() => reveal()}
-          className={`inline-flex cursor-pointer items-center gap-1 transition-opacity hover:opacity-70 ${className}`}
-          title="Нажмите, чтобы показать все суммы на 10 сек"
-        >
-          <span>{shouldHide ? '****' : numberPart}</span>
-          {!shouldHide && (
-            <img src="/byn-icon.png" alt="BYN" className="inline-block h-4 w-4 dark:invert" />
-          )}
-        </button>
-      )
-    }
-
     const formatted = formatCurrency(amount, currency)
     return (
       <button
