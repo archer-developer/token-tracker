@@ -17,6 +17,28 @@ import type { Currency, PaymentStatus } from '@/db/types'
 
 const DAY_NAMES = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
 
+function CurrencyAmount({
+  amount,
+  currency,
+  className = '',
+}: {
+  amount: number
+  currency: Currency
+  className?: string
+}) {
+  const formatted = formatCurrency(amount, currency)
+  if (currency === 'BYN') {
+    const numberPart = formatted.replace(/\s?BYN\s?/g, '').trim()
+    return (
+      <span className={`inline-flex items-center gap-1 ${className}`}>
+        <span>{numberPart}</span>
+        <i className="nbrb-icon" />
+      </span>
+    )
+  }
+  return <span className={className}>{formatted}</span>
+}
+
 function dotClass(status: PaymentStatus): string {
   if (status === 'paid') return 'bg-green-500'
   if (status === 'missed') return 'bg-red-500'
@@ -86,7 +108,7 @@ function DayModal({ day, year, month, entries, onClose }: DayModalProps) {
                   {formatDateRange(payment.paymentDateFrom, payment.paymentDateTo)}
                 </p>
                 <p className="mt-1 text-sm font-semibold text-gray-900 tabular-nums dark:text-gray-100">
-                  {formatCurrency(payment.expectedAmount, instrumentCurrency)}
+                  <CurrencyAmount amount={payment.expectedAmount} currency={instrumentCurrency} />
                 </p>
               </div>
               <Badge
@@ -316,7 +338,7 @@ export default function CalendarScreen() {
                         </div>
 
                         <p className="mt-0.5 hidden truncate text-[10px] text-gray-500 tabular-nums md:block dark:text-gray-400">
-                          {formatCurrency(cellTotal, baseCurrency)}
+                          <CurrencyAmount amount={cellTotal} currency={baseCurrency} />
                         </p>
                       </>
                     )}
@@ -345,7 +367,7 @@ export default function CalendarScreen() {
                       {t('calendar.expected')}
                     </p>
                     <p className="mt-1 text-sm font-semibold text-gray-900 tabular-nums dark:text-gray-100">
-                      {formatCurrency(totals.expected, currency)}
+                      <CurrencyAmount amount={totals.expected} currency={currency} />
                     </p>
                   </div>
                   <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
@@ -353,7 +375,7 @@ export default function CalendarScreen() {
                       {t('payment.status_paid')}
                     </p>
                     <p className="mt-1 text-sm font-semibold text-green-600 tabular-nums dark:text-green-400">
-                      {formatCurrency(totals.paid, currency)}
+                      <CurrencyAmount amount={totals.paid} currency={currency} />
                     </p>
                   </div>
                   <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
@@ -361,7 +383,7 @@ export default function CalendarScreen() {
                       {t('payment.status_missed')}
                     </p>
                     <p className="mt-1 text-sm font-semibold text-red-600 tabular-nums dark:text-red-400">
-                      {formatCurrency(totals.missed, currency)}
+                      <CurrencyAmount amount={totals.missed} currency={currency} />
                     </p>
                   </div>
                 </div>
@@ -381,7 +403,7 @@ export default function CalendarScreen() {
                       {t('calendar.expected')}
                     </p>
                     <p className="mt-1 text-sm font-semibold text-gray-900 tabular-nums dark:text-gray-100">
-                      {formatCurrency(grandExpected, baseCurrency)}
+                      <CurrencyAmount amount={grandExpected} currency={baseCurrency} />
                     </p>
                   </div>
                   <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
@@ -389,7 +411,7 @@ export default function CalendarScreen() {
                       {t('payment.status_paid')}
                     </p>
                     <p className="mt-1 text-sm font-semibold text-green-600 tabular-nums dark:text-green-400">
-                      {formatCurrency(grandPaid, baseCurrency)}
+                      <CurrencyAmount amount={grandPaid} currency={baseCurrency} />
                     </p>
                   </div>
                   <div className="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-900">
@@ -397,7 +419,7 @@ export default function CalendarScreen() {
                       {t('payment.status_missed')}
                     </p>
                     <p className="mt-1 text-sm font-semibold text-red-600 tabular-nums dark:text-red-400">
-                      {formatCurrency(grandMissed, baseCurrency)}
+                      <CurrencyAmount amount={grandMissed} currency={baseCurrency} />
                     </p>
                   </div>
                 </div>
