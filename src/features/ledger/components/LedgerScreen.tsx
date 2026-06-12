@@ -44,7 +44,7 @@ function exportToCsv(entries: ReturnType<typeof useLedgerEntries>): void {
     e.date,
     e.type,
     `"${e.instrumentName.replace(/"/g, '""')}"`,
-    formatCurrency(e.amount, e.instrumentCurrency),
+    `"${formatCurrency(e.amount, e.instrumentCurrency)}"`,
   ])
   const csv = [header, ...rows].map((r) => r.join(',')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
