@@ -16,13 +16,19 @@ import { Input } from '@/shared/components/Input'
 import { Modal } from '@/shared/components/Modal'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { Spinner } from '@/shared/components/Spinner'
+import { Toggle } from '@/shared/components/Toggle'
 import { useInstrument } from '@/features/instruments/hooks/useInstruments'
 import { usePaymentSummary } from '@/features/instruments/hooks/usePaymentSummary'
 import { PurchaseLotList } from '@/features/purchaseLots/components/PurchaseLotList'
 import { PaymentList } from '@/features/payments/components/PaymentList'
+import {
+  getMaturedPreview,
+  markInstrumentMatured,
+  type MaturedPreview,
+} from '@/features/instruments/markMatured'
 import { db } from '@/db/db'
 import { formatDate, formatCurrency } from '@/shared/utils/format'
-import type { InstrumentStatus, PaymentRecord, PaymentStatus } from '@/db/types'
+import type { InstrumentStatus } from '@/db/types'
 
 function statusBadgeVariant(status: InstrumentStatus): 'green' | 'blue' | 'red' | 'gray' {
   if (status === 'active') return 'green'
@@ -63,7 +69,12 @@ export default function InstrumentDetailScreen() {
 
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [maturedConfirmOpen, setMaturedConfirmOpen] = useState(false)
-  const [maturedPayments, setMaturedPayments] = useState<PaymentRecord[]>([])
+  const [maturedPreview, setMaturedPreview] = useState<MaturedPreview>({
+    redemptions: [],
+    coupons: [],
+  })
+  const [redemptionDate, setRedemptionDate] = useState('')
+  const [markCouponsPaid, setMarkCouponsPaid] = useState(false)
   const [defaultModalOpen, setDefaultModalOpen] = useState(false)
   const [defaultForm, setDefaultForm] = useState<DefaultFormState>(emptyDefaultForm)
   const [soldConfirmOpen, setSoldConfirmOpen] = useState(false)
@@ -105,36 +116,15 @@ export default function InstrumentDetailScreen() {
 
   async function openMarkMatured() {
     if (instrument?.id == null) return
-    const payments = await db.paymentRecords
-      .where('instrumentId')
-      .equals(instrument.id)
-      .filter((p) => p.status === 'scheduled' && p.expectedAmount > 0)
-      .toArray()
-    setMaturedPayments(payments)
+    setMaturedPreview(await getMaturedPreview(instrument.id))
+    setRedemptionDate(new Date().toISOString().slice(0, 10))
+    setMarkCouponsPaid(false)
     setMaturedConfirmOpen(true)
   }
 
   async function handleConfirmMatured() {
-    if (instrument?.id == null) return
-    const now = new Date().toISOString()
-    await db.transaction('rw', [db.instruments, db.paymentRecords, db.ledgerEntries], async () => {
-      await db.instruments.update(instrument.id!, { status: 'matured', updatedAt: now })
-      for (const p of maturedPayments) {
-        if (p.id == null) continue
-        await db.paymentRecords.update(p.id, {
-          status: 'paid' as PaymentStatus,
-          actualAmount: p.expectedAmount,
-          paidAt: p.paymentDateFrom,
-        })
-        await db.ledgerEntries.add({
-          instrumentId: instrument.id!,
-          date: p.paymentDateFrom,
-          type: p.type,
-          amount: p.expectedAmount,
-          createdAt: now,
-        })
-      }
-    })
+    if (instrument?.id == null || !redemptionDate) return
+    await markInstrumentMatured(instrument.id, { redemptionDate, markCouponsPaid })
     setMaturedConfirmOpen(false)
   }
 
@@ -294,6 +284,12 @@ export default function InstrumentDetailScreen() {
           )}
           <DetailItem label={t('instrument.startDate')} value={formatDate(instrument.startDate)} />
           <DetailItem label={t('instrument.endDate')} value={formatDate(instrument.endDate)} />
+          {instrument.status === 'matured' && instrument.redemptionDate && (
+            <DetailItem
+              label={t('instrument.redemptionDate')}
+              value={formatDate(instrument.redemptionDate)}
+            />
+          )}
           <DetailItem
             label={t('instrument.paymentFrequency')}
             value={t(`instrument.frequency.${instrument.paymentFrequency}`)}
@@ -419,24 +415,56 @@ export default function InstrumentDetailScreen() {
             <Button variant="secondary" onClick={() => setMaturedConfirmOpen(false)}>
               {t('common.cancel')}
             </Button>
-            <Button variant="primary" onClick={() => void handleConfirmMatured()}>
+            <Button
+              variant="primary"
+              disabled={!redemptionDate}
+              onClick={() => void handleConfirmMatured()}
+            >
               {t('common.confirm')}
             </Button>
           </>
         }
       >
-        <div className="flex flex-col gap-2 text-sm text-gray-700 dark:text-gray-300">
+        <div className="flex flex-col gap-4 text-sm text-gray-700 dark:text-gray-300">
           <p>{t('instrument.markMaturedWarning')}</p>
-          {maturedPayments.length > 0 ? (
+          <Input
+            label={t('instrument.redemptionDate')}
+            type="date"
+            value={redemptionDate}
+            onChange={(e) => setRedemptionDate(e.target.value)}
+          />
+          {maturedPreview.redemptions.length > 0 && (
             <p>
-              {t('instrument.markMaturedPaymentsInfo', {
-                count: maturedPayments.length,
+              {t('instrument.markMaturedPrincipalInfo', {
                 total: formatCurrency(
-                  maturedPayments.reduce((s, p) => s + p.expectedAmount, 0),
+                  maturedPreview.redemptions.reduce((s, p) => s + p.expectedAmount, 0),
                   instrument.currency,
                 ),
               })}
             </p>
+          )}
+          {maturedPreview.coupons.length > 0 ? (
+            <>
+              <Toggle
+                label={t('instrument.markMaturedCouponsPaid')}
+                checked={markCouponsPaid}
+                onChange={setMarkCouponsPaid}
+              />
+              <p>
+                {t(
+                  markCouponsPaid
+                    ? 'instrument.markMaturedCouponsPaidInfo'
+                    : 'instrument.markMaturedCouponsCancelledInfo',
+                  {
+                    count: maturedPreview.coupons.length,
+                    total: formatCurrency(
+                      maturedPreview.coupons.reduce((s, p) => s + p.expectedAmount, 0),
+                      instrument.currency,
+                    ),
+                  },
+                )}
+              </p>
+            </>
           ) : (
             <p className="text-gray-500 dark:text-gray-400">
               {t('instrument.markMaturedNoPayments')}

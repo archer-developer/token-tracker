@@ -42,6 +42,8 @@ export function useCalendarPayments(year: number, month: number): DayPaymentsMap
       const map: DayPaymentsMap = new Map()
 
       for (const payment of payments) {
+        // Cancelled payments (e.g. coupons voided by early redemption) are kept in the DB but hidden.
+        if (payment.status === 'cancelled') continue
         const dateISO = displayDateISO(payment)
         if (!dateISO.startsWith(monthStr)) continue
 

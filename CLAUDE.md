@@ -84,7 +84,7 @@ src/
 ├── store/uiStore.ts  # Zustand: theme, language, baseCurrency, sidebarOpen
 └── test/setup.ts     # @testing-library/jest-dom + fake-indexeddb/auto
 e2e/                  # Playwright tests
-docs/                 # Architecture, PRD, glossary, examples
+docs/                 # Architecture, PRD, glossary, examples, adrs/ (decision records)
 ```
 
 Path alias: `@/` → `src/`
@@ -154,8 +154,15 @@ January 47.25 = 5 680×0.11×17/365 + 10 040×0.11×6/365 (Lot 1 from Jan 9, Lot
 - When saving an instrument (InstrumentFormScreen)
 - When adding / editing / deleting a purchase lot (PurchaseLotList)
 
-It **preserves** records with `status: 'paid' | 'missed'` (matched by `${periodIndex}:${type}`).
+It **preserves** all non-`scheduled` records (`paid | missed | cancelled`, matched by `${periodIndex}:${type}`).
 Passes the full `PurchaseLot[]` list to `generateSchedule`; per-period principal is derived from lot purchase dates.
+
+### Maturity / Early Redemption (`src/features/instruments/markMatured.ts`)
+
+`markInstrumentMatured(id, { redemptionDate, markCouponsPaid })` — see `docs/adrs/0001-early-redemption-cancelled-payments.md`.
+Redemption is paid on the actual `redemptionDate` (stored on the instrument). Remaining coupons are either
+paid on scheduled dates (toggle on) or set to `cancelled` (default). `cancelled` records stay in the DB,
+are hidden from the calendar and shown in the instrument's payment history.
 
 ### XIRR (`src/services/xirr/xirr.ts`)
 
@@ -215,7 +222,7 @@ Currency formatting uses `ru-BY` locale via `Intl.NumberFormat`.
 - Responsive: sidebar on desktop (≥768 px), bottom tab bar on mobile
 - All monetary amounts go through `formatCurrency(amount, currency)` — never raw numbers
 - Dates go through `formatDate(iso)` or `formatDateRange(from, to)` — never raw ISO strings
-- Status badges: green=active/paid, blue=matured/coupon-type, red=defaulted/missed, yellow=scheduled
+- Status badges: green=active/paid, blue=matured/coupon-type, red=defaulted/missed, yellow=scheduled, gray=cancelled
 
 ---
 
