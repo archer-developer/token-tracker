@@ -30,6 +30,12 @@ To take screenshots without committing, run `npm run screenshots` separately.
 **Never commit or push automatically.** Only create commits when explicitly asked.  
 Always show the changes first and wait for confirmation.
 
+### Deployment
+
+GitHub Pages: https://archer-developer.github.io/token-tracker/  
+Every push to `master` runs `.github/workflows/deploy.yml` (unit tests → build with `base: '/token-tracker/'` → Pages).
+To deploy, merge the feature branch into `master` (via PR). Manual re-run: `workflow_dispatch`.
+
 ### Version bumping
 
 **Run `npm run version:patch` before every commit** (staged together with the code changes).  
