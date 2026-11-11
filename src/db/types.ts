@@ -3,7 +3,7 @@ export type Theme = 'light' | 'dark' | 'system'
 export type Language = 'ru' | 'by'
 export type InstrumentStatus = 'active' | 'matured' | 'defaulted' | 'sold'
 export type PaymentFrequency = 'monthly' | 'quarterly' | 'custom'
-export type PaymentStatus = 'scheduled' | 'paid' | 'missed'
+export type PaymentStatus = 'scheduled' | 'paid' | 'missed' | 'cancelled'
 export type PaymentType = 'coupon' | 'redemption' | 'recovery'
 export type LedgerEntryType = 'purchase' | 'coupon' | 'redemption' | 'recovery' | 'sale'
 
@@ -27,6 +27,7 @@ export interface Instrument {
   expectedRecoveryRate?: number
   expectedRecoveryDate?: string
   defaultNotes?: string
+  redemptionDate?: string
   createdAt: string
   updatedAt: string
 }

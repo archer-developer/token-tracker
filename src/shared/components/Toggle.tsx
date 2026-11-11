@@ -12,6 +12,8 @@ export function Toggle({ checked, onChange, label }: ToggleProps) {
       )}
       <button
         type="button"
+        role="switch"
+        aria-checked={checked}
         onClick={() => onChange(!checked)}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
           checked ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'

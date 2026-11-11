@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CircleCheck, CircleX, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Ban, CircleCheck, CircleX, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { PaymentRecord, PaymentStatus } from '@/db/types'
 import { usePayments } from '@/features/payments/hooks/usePayments'
 import { useInstrument } from '@/features/instruments/hooks/useInstruments'
@@ -11,7 +11,7 @@ import { Input } from '@/shared/components/Input'
 import { Modal } from '@/shared/components/Modal'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 import { EmptyState } from '@/shared/components/EmptyState'
-import { formatCurrency, formatDateRange } from '@/shared/utils/format'
+import { formatCurrency, formatDate, formatDateRange } from '@/shared/utils/format'
 import { useUIStore } from '@/store/uiStore'
 
 interface Props {
@@ -22,16 +22,34 @@ type Tab = 'upcoming' | 'history'
 
 const PAGE_SIZE = 5
 
-const statusBadgeVariant: Record<PaymentStatus, 'yellow' | 'green' | 'red'> = {
+const statusBadgeVariant: Record<PaymentStatus, 'yellow' | 'green' | 'red' | 'gray'> = {
   scheduled: 'yellow',
   paid: 'green',
   missed: 'red',
+  cancelled: 'gray',
 }
 
 const statusIcons: Record<PaymentStatus, ReactNode> = {
   scheduled: <Clock className="size-3.5" />,
   paid: <CircleCheck className="size-3.5" />,
   missed: <CircleX className="size-3.5" />,
+  cancelled: <Ban className="size-3.5" />,
+}
+
+// Actual date for payments made outside their scheduled window (e.g. early redemption)
+function displayDate(p: PaymentRecord): string {
+  if (
+    p.status === 'paid' &&
+    p.paidAt &&
+    (p.paidAt < p.paymentDateFrom || p.paidAt > p.paymentDateTo)
+  ) {
+    return formatDate(p.paidAt)
+  }
+  return formatDateRange(p.paymentDateFrom, p.paymentDateTo)
+}
+
+function effectiveDate(p: PaymentRecord): string {
+  return p.status === 'paid' && p.paidAt ? p.paidAt : p.paymentDateFrom
 }
 
 interface MarkPaidState {
@@ -59,19 +77,19 @@ export function PaymentList({ instrumentId }: Props) {
   }
 
   // upcoming: scheduled, ascending (nearest future first — already from hook)
-  // history: paid + missed, descending (most recent first)
+  // history: paid + missed + cancelled, descending by effective date (most recent first)
   const filtered =
     tab === 'upcoming'
       ? payments.filter(
           (p) => p.status === 'scheduled' && (showZeroPayments || p.expectedAmount > 0),
         )
-      : [
-          ...payments.filter(
+      : payments
+          .filter(
             (p) =>
-              (p.status === 'paid' || p.status === 'missed') &&
+              p.status !== 'scheduled' &&
               (showZeroPayments || p.expectedAmount > 0 || p.actualAmount?.toString() !== ''),
-          ),
-        ].reverse()
+          )
+          .sort((a, b) => effectiveDate(b).localeCompare(effectiveDate(a)))
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const displayed = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE)
@@ -179,7 +197,7 @@ export function PaymentList({ instrumentId }: Props) {
                       />
                     </div>
                     <span className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      {formatDateRange(payment.paymentDateFrom, payment.paymentDateTo)}
+                      {displayDate(payment)}
                     </span>
                     <div className="mt-1 flex gap-4 text-sm">
                       <span className="text-gray-600 dark:text-gray-400">

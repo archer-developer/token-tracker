@@ -16,7 +16,7 @@ export async function regenerateSchedule(instrument: Instrument): Promise<void> 
 
   const preservedMap = new Map(
     existingRecords
-      .filter((r) => r.status === 'paid' || r.status === 'missed')
+      .filter((r) => r.status !== 'scheduled')
       .map((r) => [`${r.periodIndex}:${r.type}`, r]),
   )
 
