@@ -1,0 +1,579 @@
+{
+  "instrument": {
+    "name": "HELIEUR28",
+    "platform": "Bynex",
+    "currency": "EUR",
+    "couponRate": 9.2,
+    "tokenPrice": 50,
+    "startDate": "2025-05-24",
+    "endDate": "2028-08-25",
+    "paymentFrequency": "monthly",
+    "paymentDayFrom": 10,
+    "paymentDayTo": 10,
+    "whitepaperUrl": "https://bynex.io/investment/api/document/301/1f028628-5204-4caa-8d0d-3b49ff6e1d4f",
+    "updatedAt": "2026-05-31T16:13:47.650Z",
+    "status": "active",
+    "createdAt": "2026-05-31T16:13:47.650Z",
+    "id": 12
+  },
+  "purchaseLots": [
+    {
+      "instrumentId": 12,
+      "purchaseDate": "2026-01-24",
+      "quantity": 120,
+      "pricePerToken": 50,
+      "totalCost": 6000,
+      "createdAt": "2026-05-31T16:15:27.507Z",
+      "id": 16
+    },
+    {
+      "instrumentId": 12,
+      "purchaseDate": "2025-12-23",
+      "quantity": 60,
+      "pricePerToken": 50,
+      "totalCost": 3000,
+      "createdAt": "2026-05-31T16:17:15.625Z",
+      "id": 17
+    }
+  ],
+  "paymentRecords": [
+    {
+      "instrumentId": 12,
+      "periodIndex": 0,
+      "type": "coupon",
+      "paymentDateFrom": "2025-06-10",
+      "paymentDateTo": "2025-06-10",
+      "expectedAmount": 0,
+      "status": "scheduled",
+      "id": 1479
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 1,
+      "type": "coupon",
+      "paymentDateFrom": "2025-07-10",
+      "paymentDateTo": "2025-07-10",
+      "expectedAmount": 0,
+      "status": "scheduled",
+      "id": 1480
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 2,
+      "type": "coupon",
+      "paymentDateFrom": "2025-08-10",
+      "paymentDateTo": "2025-08-10",
+      "expectedAmount": 0,
+      "status": "scheduled",
+      "id": 1481
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 3,
+      "type": "coupon",
+      "paymentDateFrom": "2025-09-10",
+      "paymentDateTo": "2025-09-10",
+      "expectedAmount": 0,
+      "status": "scheduled",
+      "id": 1482
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 4,
+      "type": "coupon",
+      "paymentDateFrom": "2025-10-10",
+      "paymentDateTo": "2025-10-10",
+      "expectedAmount": 0,
+      "status": "scheduled",
+      "id": 1483
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 5,
+      "type": "coupon",
+      "paymentDateFrom": "2025-11-10",
+      "paymentDateTo": "2025-11-10",
+      "expectedAmount": 0,
+      "status": "scheduled",
+      "id": 1484
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 6,
+      "type": "coupon",
+      "paymentDateFrom": "2025-12-10",
+      "paymentDateTo": "2025-12-10",
+      "expectedAmount": 0,
+      "status": "scheduled",
+      "id": 1485
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 7,
+      "type": "coupon",
+      "paymentDateFrom": "2026-01-10",
+      "paymentDateTo": "2026-01-10",
+      "expectedAmount": 6.81,
+      "status": "paid",
+      "id": 1486,
+      "actualAmount": 6.81,
+      "paidAt": "2026-01-10"
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 8,
+      "type": "coupon",
+      "paymentDateFrom": "2026-02-10",
+      "paymentDateTo": "2026-02-10",
+      "expectedAmount": 35.54,
+      "status": "paid",
+      "id": 1487,
+      "actualAmount": 35.54,
+      "paidAt": "2026-02-10"
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 9,
+      "type": "coupon",
+      "paymentDateFrom": "2026-03-10",
+      "paymentDateTo": "2026-03-10",
+      "expectedAmount": 63.52,
+      "status": "paid",
+      "id": 1488,
+      "actualAmount": 63.52,
+      "paidAt": "2026-03-10"
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 10,
+      "type": "coupon",
+      "paymentDateFrom": "2026-04-10",
+      "paymentDateTo": "2026-04-10",
+      "expectedAmount": 70.32,
+      "status": "paid",
+      "id": 1489,
+      "actualAmount": 70.32,
+      "paidAt": "2026-04-10"
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 11,
+      "type": "coupon",
+      "paymentDateFrom": "2026-05-10",
+      "paymentDateTo": "2026-05-10",
+      "expectedAmount": 68.05,
+      "status": "paid",
+      "id": 1490,
+      "actualAmount": 68.05,
+      "paidAt": "2026-05-10"
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 12,
+      "type": "coupon",
+      "paymentDateFrom": "2026-06-10",
+      "paymentDateTo": "2026-06-10",
+      "expectedAmount": 70.32,
+      "status": "paid",
+      "id": 1491,
+      "paidAt": "2026-06-10",
+      "actualAmount": 70.32
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 13,
+      "type": "coupon",
+      "paymentDateFrom": "2026-07-10",
+      "paymentDateTo": "2026-07-10",
+      "expectedAmount": 68.05,
+      "status": "paid",
+      "id": 1492,
+      "paidAt": "2026-07-10",
+      "actualAmount": 68.05
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 14,
+      "type": "coupon",
+      "paymentDateFrom": "2026-08-10",
+      "paymentDateTo": "2026-08-10",
+      "expectedAmount": 70.32,
+      "status": "paid",
+      "id": 1493,
+      "paidAt": "2026-08-10",
+      "actualAmount": 70.32
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 15,
+      "type": "coupon",
+      "paymentDateFrom": "2026-09-10",
+      "paymentDateTo": "2026-09-10",
+      "expectedAmount": 70.32,
+      "status": "paid",
+      "id": 1494,
+      "paidAt": "2026-09-10",
+      "actualAmount": 70.32
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 16,
+      "type": "coupon",
+      "paymentDateFrom": "2026-10-10",
+      "paymentDateTo": "2026-10-10",
+      "expectedAmount": 68.05,
+      "status": "paid",
+      "id": 1495,
+      "paidAt": "2026-10-10",
+      "actualAmount": 68.05
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 17,
+      "type": "coupon",
+      "paymentDateFrom": "2026-11-10",
+      "paymentDateTo": "2026-11-10",
+      "expectedAmount": 70.32,
+      "status": "paid",
+      "id": 1496,
+      "paidAt": "2026-11-10",
+      "actualAmount": 70.32
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 18,
+      "type": "coupon",
+      "paymentDateFrom": "2026-12-10",
+      "paymentDateTo": "2026-12-10",
+      "expectedAmount": 68.05,
+      "status": "scheduled",
+      "id": 1497
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 19,
+      "type": "coupon",
+      "paymentDateFrom": "2027-01-10",
+      "paymentDateTo": "2027-01-10",
+      "expectedAmount": 70.32,
+      "status": "scheduled",
+      "id": 1498
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 20,
+      "type": "coupon",
+      "paymentDateFrom": "2027-02-10",
+      "paymentDateTo": "2027-02-10",
+      "expectedAmount": 70.32,
+      "status": "scheduled",
+      "id": 1499
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 21,
+      "type": "coupon",
+      "paymentDateFrom": "2027-03-10",
+      "paymentDateTo": "2027-03-10",
+      "expectedAmount": 63.52,
+      "status": "scheduled",
+      "id": 1500
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 22,
+      "type": "coupon",
+      "paymentDateFrom": "2027-04-10",
+      "paymentDateTo": "2027-04-10",
+      "expectedAmount": 70.32,
+      "status": "scheduled",
+      "id": 1501
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 23,
+      "type": "coupon",
+      "paymentDateFrom": "2027-05-10",
+      "paymentDateTo": "2027-05-10",
+      "expectedAmount": 68.05,
+      "status": "scheduled",
+      "id": 1502
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 24,
+      "type": "coupon",
+      "paymentDateFrom": "2027-06-10",
+      "paymentDateTo": "2027-06-10",
+      "expectedAmount": 70.32,
+      "status": "scheduled",
+      "id": 1503
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 25,
+      "type": "coupon",
+      "paymentDateFrom": "2027-07-10",
+      "paymentDateTo": "2027-07-10",
+      "expectedAmount": 68.05,
+      "status": "scheduled",
+      "id": 1504
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 26,
+      "type": "coupon",
+      "paymentDateFrom": "2027-08-10",
+      "paymentDateTo": "2027-08-10",
+      "expectedAmount": 70.32,
+      "status": "scheduled",
+      "id": 1505
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 27,
+      "type": "coupon",
+      "paymentDateFrom": "2027-09-10",
+      "paymentDateTo": "2027-09-10",
+      "expectedAmount": 70.32,
+      "status": "scheduled",
+      "id": 1506
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 28,
+      "type": "coupon",
+      "paymentDateFrom": "2027-10-10",
+      "paymentDateTo": "2027-10-10",
+      "expectedAmount": 68.05,
+      "status": "scheduled",
+      "id": 1507
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 29,
+      "type": "coupon",
+      "paymentDateFrom": "2027-11-10",
+      "paymentDateTo": "2027-11-10",
+      "expectedAmount": 70.32,
+      "status": "scheduled",
+      "id": 1508
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 30,
+      "type": "coupon",
+      "paymentDateFrom": "2027-12-10",
+      "paymentDateTo": "2027-12-10",
+      "expectedAmount": 68.05,
+      "status": "scheduled",
+      "id": 1509
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 31,
+      "type": "coupon",
+      "paymentDateFrom": "2028-01-10",
+      "paymentDateTo": "2028-01-10",
+      "expectedAmount": 70.32,
+      "status": "scheduled",
+      "id": 1510
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 32,
+      "type": "coupon",
+      "paymentDateFrom": "2028-02-10",
+      "paymentDateTo": "2028-02-10",
+      "expectedAmount": 70.13,
+      "status": "scheduled",
+      "id": 1511
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 33,
+      "type": "coupon",
+      "paymentDateFrom": "2028-03-10",
+      "paymentDateTo": "2028-03-10",
+      "expectedAmount": 65.61,
+      "status": "scheduled",
+      "id": 1512
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 34,
+      "type": "coupon",
+      "paymentDateFrom": "2028-04-10",
+      "paymentDateTo": "2028-04-10",
+      "expectedAmount": 70.13,
+      "status": "scheduled",
+      "id": 1513
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 35,
+      "type": "coupon",
+      "paymentDateFrom": "2028-05-10",
+      "paymentDateTo": "2028-05-10",
+      "expectedAmount": 67.87,
+      "status": "scheduled",
+      "id": 1514
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 36,
+      "type": "coupon",
+      "paymentDateFrom": "2028-06-10",
+      "paymentDateTo": "2028-06-10",
+      "expectedAmount": 70.13,
+      "status": "scheduled",
+      "id": 1515
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 37,
+      "type": "coupon",
+      "paymentDateFrom": "2028-07-10",
+      "paymentDateTo": "2028-07-10",
+      "expectedAmount": 67.87,
+      "status": "scheduled",
+      "id": 1516
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 38,
+      "type": "coupon",
+      "paymentDateFrom": "2028-08-10",
+      "paymentDateTo": "2028-08-10",
+      "expectedAmount": 70.13,
+      "status": "scheduled",
+      "id": 1517
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 39,
+      "type": "coupon",
+      "paymentDateFrom": "2028-08-10",
+      "paymentDateTo": "2028-08-10",
+      "expectedAmount": 56.56,
+      "status": "scheduled",
+      "id": 1518
+    },
+    {
+      "instrumentId": 12,
+      "periodIndex": 39.5,
+      "type": "redemption",
+      "paymentDateFrom": "2028-08-25",
+      "paymentDateTo": "2028-08-25",
+      "expectedAmount": 9000,
+      "status": "scheduled",
+      "id": 1519
+    }
+  ],
+  "ledgerEntries": [
+    {
+      "instrumentId": 12,
+      "date": "2026-01-24",
+      "type": "purchase",
+      "amount": -6000,
+      "createdAt": "2026-05-31T16:15:27.507Z",
+      "id": 114
+    },
+    {
+      "instrumentId": 12,
+      "date": "2025-12-23",
+      "type": "purchase",
+      "amount": -3000,
+      "createdAt": "2026-05-31T16:17:15.625Z",
+      "id": 115
+    },
+    {
+      "instrumentId": 12,
+      "date": "2026-01-10",
+      "type": "coupon",
+      "amount": 6.81,
+      "createdAt": "2026-05-31T16:17:29.388Z",
+      "id": 116
+    },
+    {
+      "instrumentId": 12,
+      "date": "2026-02-10",
+      "type": "coupon",
+      "amount": 35.54,
+      "createdAt": "2026-05-31T16:17:30.984Z",
+      "id": 117
+    },
+    {
+      "instrumentId": 12,
+      "date": "2026-03-10",
+      "type": "coupon",
+      "amount": 63.52,
+      "createdAt": "2026-05-31T16:17:32.421Z",
+      "id": 118
+    },
+    {
+      "instrumentId": 12,
+      "date": "2026-04-10",
+      "type": "coupon",
+      "amount": 70.32,
+      "createdAt": "2026-05-31T16:17:35.727Z",
+      "id": 119
+    },
+    {
+      "instrumentId": 12,
+      "date": "2026-05-10",
+      "type": "coupon",
+      "amount": 68.05,
+      "createdAt": "2026-05-31T16:17:38.151Z",
+      "id": 120
+    },
+    {
+      "instrumentId": 12,
+      "date": "2026-06-10",
+      "type": "coupon",
+      "amount": 70.32,
+      "createdAt": "2026-06-10T09:45:00.384Z",
+      "id": 124
+    },
+    {
+      "instrumentId": 12,
+      "date": "2026-07-10",
+      "type": "coupon",
+      "amount": 68.05,
+      "createdAt": "2026-07-15T13:57:12.528Z",
+      "id": 136
+    },
+    {
+      "instrumentId": 12,
+      "date": "2026-08-10",
+      "type": "coupon",
+      "amount": 70.32,
+      "createdAt": "2026-08-20T07:58:32.908Z",
+      "id": 145
+    },
+    {
+      "instrumentId": 12,
+      "date": "2026-09-10",
+      "type": "coupon",
+      "amount": 70.32,
+      "createdAt": "2026-09-19T17:24:09.754Z",
+      "id": 152
+    },
+    {
+      "instrumentId": 12,
+      "date": "2026-10-10",
+      "type": "coupon",
+      "amount": 68.05,
+      "createdAt": "2026-10-23T08:46:29.054Z",
+      "id": 162
+    },
+    {
+      "instrumentId": 12,
+      "date": "2026-11-10",
+      "type": "coupon",
+      "amount": 70.32,
+      "createdAt": "2026-11-10T20:55:48.727Z",
+      "id": 171
+    }
+  ]
+}
